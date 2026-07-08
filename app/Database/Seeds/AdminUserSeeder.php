@@ -10,7 +10,7 @@ class AdminUserSeeder extends Seeder
     {
         $this->db->table('admin_users')->insert([
             'name' => 'Administrador',
-            'email' => 'admin@lupitacrm.com',
+            'email' => 'admin@lupitaserrano.com',
             'password' => password_hash('Admin123*', PASSWORD_DEFAULT),
             'role' => 'admin',
             'status' => 'active',
