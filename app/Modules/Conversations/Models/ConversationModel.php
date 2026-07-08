@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace Modules\Conversations\Models;
 
 use CodeIgniter\Model;
 

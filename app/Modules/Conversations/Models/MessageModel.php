@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace Modules\Conversations\Models;
 
 use CodeIgniter\Model;
 
@@ -18,6 +18,9 @@ class MessageModel extends Model
         'sentiment',
         'category',
         'priority',
+        'sent_status',
+        'sent_at',
+        'delivery_error',
     ];
 
     protected $useTimestamps = true;

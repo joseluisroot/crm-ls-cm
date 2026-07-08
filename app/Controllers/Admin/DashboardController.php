@@ -3,11 +3,10 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use App\Models\CaseModel;
-use App\Models\CitizenModel;
-use App\Models\ConversationModel;
-use App\Models\MessageModel;
-use CodeIgniter\HTTP\ResponseInterface;
+use Modules\Cases\Models\CaseModel;
+use Modules\Citizens\Models\CitizenModel;
+use Modules\Conversations\Models\ConversationModel;
+use Modules\Conversations\Models\MessageModel;
 
 class DashboardController extends BaseController
 {

@@ -1,8 +1,6 @@
 <?php
 
-namespace App\Services;
-
-use CodeIgniter\HTTP\CURLRequest;
+namespace Modules\Messenger\Services;
 
 class MessengerService
 {

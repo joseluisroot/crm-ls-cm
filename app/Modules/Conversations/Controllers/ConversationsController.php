@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Controllers\Admin;
+namespace Modules\Conversations\Controllers;
 
 use App\Controllers\BaseController;
-use App\Models\ConversationModel;
-use App\Models\MessageModel;
-use CodeIgniter\HTTP\ResponseInterface;
+use Modules\Conversations\Models\ConversationModel;
+use Modules\Conversations\Models\MessageModel;
 
 class ConversationsController extends BaseController
 {
@@ -19,19 +18,16 @@ class ConversationsController extends BaseController
             ->orderBy('last_message_at', 'DESC')
             ->paginate(20);
 
-        $data = [
+        return view('Modules\Conversations\Views\index', [
             'title' => 'Conversaciones',
             'conversations' => $conversations,
             'pager' => $conversationModel->pager,
-        ];
-
-        return view('admin/conversations/index', $data);
+        ]);
     }
 
     public function show($id)
     {
         $conversationModel = new ConversationModel();
-        $messageModel = new MessageModel();
 
         $conversation = $conversationModel
             ->select('conversations.*, citizens.name as citizen_name')
@@ -43,15 +39,14 @@ class ConversationsController extends BaseController
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Conversación no encontrada');
         }
 
-        $data = [
+        return view('Modules\Conversations\Views\show', [
             'title' => 'Detalle de conversación',
             'conversation' => $conversation,
-            'messages' => $messageModel
+            'messages' => (new MessageModel())
                 ->where('conversation_id', $id)
                 ->orderBy('created_at', 'ASC')
                 ->findAll(),
-        ];
-
-        return view('admin/conversations/show', $data);
+        ]);
     }
+
 }

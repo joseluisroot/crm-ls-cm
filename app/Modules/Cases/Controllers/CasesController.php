@@ -1,9 +1,12 @@
 <?php
 
-namespace App\Controllers\Admin;
+namespace Modules\Cases\Controllers;
 
+use Modules\Cases\Models\CaseModel;
+use Modules\Cases\Models\CategoryModel;
+use Modules\Cases\Models\CaseStatusModel;
+use Modules\Citizens\Models\CitizenModel;
 use App\Controllers\BaseController;
-use CodeIgniter\HTTP\ResponseInterface;
 
 class CasesController extends BaseController
 {
@@ -19,32 +22,26 @@ class CasesController extends BaseController
             ->orderBy('cases.created_at', 'DESC')
             ->paginate(20);
 
-        $data = [
+        return view('Modules\Cases\Views\index', [
             'title' => 'Casos',
             'cases' => $cases,
             'pager' => $caseModel->pager,
-        ];
-
-        return view('admin/cases/index', $data);
+        ]);
     }
 
     public function create()
     {
-        $data = [
+        return view('Modules\Cases\Views\create', [
             'title' => 'Crear caso',
             'citizens' => (new CitizenModel())->orderBy('name', 'ASC')->findAll(),
             'categories' => (new CategoryModel())->orderBy('name', 'ASC')->findAll(),
             'statuses' => (new CaseStatusModel())->orderBy('id', 'ASC')->findAll(),
-        ];
-
-        return view('admin/cases/create', $data);
+        ]);
     }
 
     public function store()
     {
-        $caseModel = new CaseModel();
-
-        $caseModel->insert([
+        (new CaseModel())->insert([
             'citizen_id' => $this->request->getPost('citizen_id'),
             'category_id' => $this->request->getPost('category_id'),
             'status_id' => $this->request->getPost('status_id'),
@@ -60,9 +57,7 @@ class CasesController extends BaseController
 
     public function show($id)
     {
-        $caseModel = new CaseModel();
-
-        $case = $caseModel
+        $case = (new CaseModel())
             ->select('cases.*, citizens.name as citizen_name, categories.name as category_name, case_statuses.name as status_name')
             ->join('citizens', 'citizens.id = cases.citizen_id')
             ->join('categories', 'categories.id = cases.category_id', 'left')
@@ -74,7 +69,7 @@ class CasesController extends BaseController
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Caso no encontrado');
         }
 
-        return view('admin/cases/show', [
+        return view('Modules\Cases\Views\show', [
             'title' => 'Detalle del caso',
             'case' => $case,
         ]);
