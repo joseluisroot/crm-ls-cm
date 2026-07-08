@@ -56,7 +56,7 @@
                     value="<?= old('email') ?>"
                     required
                     class="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-pink-500"
-                    placeholder="admin@lupitacrm.com"
+                    placeholder="user@lupitaserrano.com"
             >
         </div>
 
