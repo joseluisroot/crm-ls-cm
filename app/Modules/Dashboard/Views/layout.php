@@ -27,6 +27,15 @@
             <a href="/admin/cases" class="block px-4 py-3 rounded-lg hover:bg-slate-800">Casos</a>
             <a href="/admin/messenger/events" class="block px-4 py-3 rounded-lg hover:bg-slate-800">Messenger</a>
         </nav>
+        <div class="mt-10 border-t border-slate-800 pt-6">
+            <p class="text-sm text-slate-400 mb-3">
+                <?= esc(session()->get('admin_user_name') ?? 'Usuario') ?>
+            </p>
+
+            <a href="/admin/logout" class="block px-4 py-3 rounded-lg bg-slate-800 hover:bg-red-600">
+                Cerrar sesión
+            </a>
+        </div>
     </aside>
 
     <main class="flex-1 p-8">
