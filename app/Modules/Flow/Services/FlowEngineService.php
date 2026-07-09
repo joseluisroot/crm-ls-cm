@@ -17,7 +17,7 @@ class FlowEngineService
         $conversation = $context['conversation'];
         $category = $context['category'] ?? 'pending';
 
-        $response = $this->resolveWorkflow($conversation, $category);
+        $response = $this->resolveWorkflow($conversation, $category, $context['text'] ?? null);
 
         if (!$response || !$response->text) {
             return null;
@@ -48,10 +48,10 @@ class FlowEngineService
             'last_flow_payload' => $category,
         ]);
 
-        return $outboundMessageId ? (int) $outboundMessageId : null;
+        return $outboundMessageId ? (int)$outboundMessageId : null;
     }
 
-    private function resolveWorkflow(array $conversation, string $category): ?FlowResponseDTO
+    private function resolveWorkflow(array $conversation, string $category, ?string $text = null): ?FlowResponseDTO
     {
         $welcome = new WelcomeWorkflow();
 
@@ -62,7 +62,7 @@ class FlowEngineService
         $need = new NeedWorkflow();
 
         if ($need->canRun($conversation, $category)) {
-            return $need->run();
+            return $need->run($conversation, $text, $category);
         }
 
         $simple = new SimpleCategoryWorkflow();
