@@ -7,6 +7,7 @@ use Modules\ConversationEngine\DTO\IncomingMessageDTO;
 use Modules\Conversations\Models\ConversationModel;
 use Modules\Conversations\Models\MessageModel;
 use Modules\CaseEngine\Services\CaseEngineService;
+use Modules\Flow\Services\FlowEngineService;
 
 class ConversationEngineService
 {
@@ -15,9 +16,8 @@ class ConversationEngineService
         $citizen = $this->findOrCreateCitizen($dto);
         $conversation = $this->findOrCreateConversation((int) $citizen['id'], $dto->channel);
 
-        $categorySlug = $this->detectInitialCategory($dto->text);
+        $categorySlug = $this->detectInitialCategory($dto->text, $dto->payload);
 
-        // Mensaje recibido del ciudadano
         $messageId = (new MessageModel())->insert([
             'conversation_id' => $conversation['id'],
             'direction'      => 'inbound',
@@ -44,29 +44,15 @@ class ConversationEngineService
             );
         }
 
-        $outboundMessageId = null;
-        $suggestedReply = $this->getSuggestedReply($dto->text);
-
-        // Mensaje de respuesta del sistema
-        if ($suggestedReply) {
-            $outboundMessageId = (new MessageModel())->insert([
-                'conversation_id' => $conversation['id'],
-                'direction'      => 'outbound',
-                'message_type'    => 'text',
-                'body'            => $suggestedReply,
-                'raw_payload'     => json_encode([
-                    'generated_by' => 'conversation_engine',
-                    'auto_reply'   => true,
-                    'sent'         => false,
-                ]),
-                'sentiment'      => 'system',
-                'category'       => $categorySlug,
-                'priority'       => 'normal',
-                'sent_status'    => 'suggested',
-                'sent_at'        => null,
-                'delivery_error' => null,
-            ]);
-        }
+        $outboundMessageId = (new FlowEngineService())->handle([
+            'citizen' => $citizen,
+            'conversation' => $conversation,
+            'message_id' => $messageId,
+            'case_id' => $caseId,
+            'category' => $categorySlug,
+            'text' => $dto->text,
+            'payload' => $dto->payload,
+        ]);
 
         return [
             'citizen'             => $citizen,
@@ -75,7 +61,6 @@ class ConversationEngineService
             'outbound_message_id' => $outboundMessageId,
             'case_id'             => $caseId,
             'category'            => $categorySlug,
-            'suggested_reply'     => $suggestedReply,
         ];
     }
 
@@ -118,14 +103,29 @@ class ConversationEngineService
             'citizen_id'      => $citizenId,
             'channel'         => $channel,
             'status'          => 'open',
+            'state'           => 'NEW',
             'last_message_at' => date('Y-m-d H:i:s'),
         ]);
 
         return $conversationModel->find($id);
     }
 
-    private function detectInitialCategory(?string $text): string
+    private function detectInitialCategory(?string $text, ?string $payload): string
     {
+        $payload = trim((string) $payload);
+
+        if ($payload !== '') {
+            return match ($payload) {
+                'OPTION_GREETING'   => 'saludos-felicitaciones',
+                'OPTION_NEED'       => 'necesidad-comunitaria',
+                'OPTION_SUPPORT'    => 'solicitud-apoyo',
+                'OPTION_PROPOSAL'   => 'propuesta-ciudadana',
+                'OPTION_ACTIVITIES' => 'informacion-actividades',
+                'OPTION_OTHER'      => 'otro',
+                default             => 'pending',
+            };
+        }
+
         $text = trim((string) $text);
 
         return match ($text) {
@@ -136,21 +136,6 @@ class ConversationEngineService
             '5' => 'informacion-actividades',
             '6' => 'otro',
             default => 'pending',
-        };
-    }
-
-    private function getSuggestedReply(?string $text): ?string
-    {
-        $text = trim((string) $text);
-
-        return match ($text) {
-            '1' => 'Gracias por tu saludo. Nos alegra mucho recibir tu mensaje.',
-            '2' => 'Gracias por reportar una necesidad de tu comunidad. Por favor indícanos el municipio, comunidad y una breve descripción.',
-            '3' => 'Gracias por escribirnos. Por favor cuéntanos qué tipo de apoyo o gestión necesitas.',
-            '4' => 'Gracias por compartir tu idea. Por favor descríbenos tu propuesta.',
-            '5' => 'Gracias por tu interés. Nuestro equipo podrá compartirte información sobre próximas actividades.',
-            '6' => 'Gracias por escribirnos. Por favor déjanos tu mensaje y nuestro equipo lo revisará.',
-            default => null,
         };
     }
 }

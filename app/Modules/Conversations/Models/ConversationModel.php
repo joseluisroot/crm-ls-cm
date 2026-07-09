@@ -13,7 +13,10 @@ class ConversationModel extends Model
         'citizen_id',
         'channel',
         'status',
+        'state',
         'last_message_at',
+        'welcomed_at',
+        'last_flow_payload',
     ];
 
     protected $useTimestamps = true;

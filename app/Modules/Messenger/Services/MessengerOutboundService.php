@@ -15,10 +15,26 @@ class MessengerOutboundService
             return false;
         }
 
-        $sent = (new MessengerService())->sendTextMessage(
-            $recipientId,
-            $message['body']
-        );
+        $rawPayload = [];
+
+        if (!empty($message['raw_payload'])) {
+            $rawPayload = json_decode($message['raw_payload'], true) ?: [];
+        }
+
+        $quickReplies = $rawPayload['quick_replies'] ?? [];
+
+        if (!empty($quickReplies)) {
+            $sent = (new MessengerService())->sendQuickReplies(
+                $recipientId,
+                $message['body'],
+                $quickReplies
+            );
+        } else {
+            $sent = (new MessengerService())->sendTextMessage(
+                $recipientId,
+                $message['body']
+            );
+        }
 
         if ($sent) {
             $messageModel->update($messageId, [

@@ -9,7 +9,8 @@ class IncomingMessageDTO
         public string $externalUserId,
         public ?string $text,
         public string $messageType = 'text',
-        public ?array $rawPayload = null
+        public ?array $rawPayload = null,
+        public ?string $payload = null
     ) {
     }
 }

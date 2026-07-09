@@ -45,4 +45,51 @@ class MessengerService
             return false;
         }
     }
+
+    public function sendQuickReplies(string $recipientId, string $text, array $quickReplies): bool
+    {
+        if (!$this->pageAccessToken) {
+            log_message('error', 'MESSENGER_PAGE_ACCESS_TOKEN no configurado.');
+            return false;
+        }
+
+        $client = service('curlrequest');
+
+        $url = "https://graph.facebook.com/{$this->apiVersion}/me/messages";
+
+        $formattedQuickReplies = [];
+
+        foreach ($quickReplies as $reply) {
+            $formattedQuickReplies[] = [
+                'content_type' => 'text',
+                'title' => $reply['title'],
+                'payload' => $reply['payload'],
+            ];
+        }
+
+        try {
+            $response = $client->post($url, [
+                'query' => [
+                    'access_token' => $this->pageAccessToken,
+                ],
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => [
+                    'recipient' => [
+                        'id' => $recipientId,
+                    ],
+                    'message' => [
+                        'text' => $text,
+                        'quick_replies' => $formattedQuickReplies,
+                    ],
+                ],
+            ]);
+
+            return $response->getStatusCode() >= 200 && $response->getStatusCode() < 300;
+        } catch (\Throwable $e) {
+            log_message('error', 'Error Messenger sendQuickReplies: ' . $e->getMessage());
+            return false;
+        }
+    }
 }
