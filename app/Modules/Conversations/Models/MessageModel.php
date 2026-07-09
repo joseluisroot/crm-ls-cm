@@ -13,6 +13,7 @@ class MessageModel extends Model
         'conversation_id',
         'direction',
         'message_type',
+        'external_message_id',
         'body',
         'raw_payload',
         'sentiment',

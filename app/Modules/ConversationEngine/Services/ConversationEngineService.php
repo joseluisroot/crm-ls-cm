@@ -18,10 +18,30 @@ class ConversationEngineService
 
         $categorySlug = $this->detectInitialCategory($dto->text, $dto->payload);
 
+        if ($dto->externalMessageId) {
+            $existingMessage = (new MessageModel())
+                ->where('external_message_id', $dto->externalMessageId)
+                ->first();
+
+            if ($existingMessage) {
+                log_message('info', 'Mensaje duplicado ignorado: ' . $dto->externalMessageId);
+
+                return [
+                    'citizen' => $citizen,
+                    'conversation' => $conversation,
+                    'message_id' => $existingMessage['id'],
+                    'outbound_message_id' => null,
+                    'case_id' => null,
+                    'category' => 'duplicate',
+                ];
+            }
+        }
+
         $messageId = (new MessageModel())->insert([
             'conversation_id' => $conversation['id'],
             'direction'      => 'inbound',
             'message_type'    => $dto->messageType,
+            'external_message_id' => $dto->externalMessageId,
             'body'            => $dto->text ?? '[Mensaje sin texto]',
             'raw_payload'     => json_encode($dto->rawPayload),
             'sentiment'       => 'pending',

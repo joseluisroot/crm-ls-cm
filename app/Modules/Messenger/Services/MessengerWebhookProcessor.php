@@ -25,6 +25,7 @@ class MessengerWebhookProcessor
 
         $text = $message['text'] ?? null;
         $payload = $message['quick_reply']['payload'] ?? null;
+        $externalMessageId = $message['mid'] ?? null;
 
         $dto = new \Modules\ConversationEngine\DTO\IncomingMessageDTO(
             channel: 'messenger',
@@ -32,7 +33,8 @@ class MessengerWebhookProcessor
             text: $text,
             messageType: isset($message['attachments']) ? 'attachment' : 'text',
             rawPayload: $event,
-            payload: $payload
+            payload: $payload,
+            externalMessageId: $externalMessageId
         );
 
         $result = (new \Modules\ConversationEngine\Services\ConversationEngineService())
