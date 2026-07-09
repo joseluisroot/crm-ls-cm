@@ -31,10 +31,10 @@ class MessengerWebhookProcessor
         $result = (new \Modules\ConversationEngine\Services\ConversationEngineService())
             ->handleIncomingMessage($dto);
 
-        if (!empty($result['outbound_message_id'])) {
+        /*if (!empty($result['outbound_message_id'])) {
             (new \Modules\Messenger\Services\MessengerOutboundService())
                 ->sendSuggestedReply($senderId, (int) $result['outbound_message_id']);
-        }
+        }*/
 
         if (!empty($result['suggested_reply'])) {
             // Por ahora solo guardamos la lógica.
