@@ -13,6 +13,13 @@ class MessengerWebhookProcessor
         $message = $event['message'] ?? [];
 
         if (($message['is_echo'] ?? false) === true) {
+            log_message('info', 'Messenger echo ignorado.');
+            return;
+        }
+
+        // Ignorar mensajes sin texto y sin quick reply
+        if (!isset($message['text']) && !isset($message['quick_reply'])) {
+            log_message('info', 'Mensaje Messenger ignorado: sin texto ni quick reply.');
             return;
         }
 
