@@ -4,6 +4,7 @@ namespace Modules\CaseEngine\Services;
 
 use Modules\Cases\Models\CaseHistoryModel;
 use Modules\Cases\Models\CaseModel;
+use Modules\Notification\Services\NotificationService;
 
 class CaseLifecycleService
 {
@@ -14,6 +15,15 @@ class CaseLifecycleService
             event: 'case_created',
             description: $description ?? 'Caso creado automáticamente desde una conversación ciudadana.',
             performedBy: 'system'
+        );
+
+        (new NotificationService())->createInternal(
+            subject: 'Nuevo caso ciudadano registrado',
+            body: 'Se ha registrado un nuevo caso desde una conversación ciudadana.',
+            payload: [
+                'case_id' => $caseId,
+                'event' => 'case_created',
+            ]
         );
     }
 
@@ -69,6 +79,16 @@ class CaseLifecycleService
                 event: 'case_assigned',
                 description: $description ?? 'Caso asignado a ' . $assignedTo . '.',
                 performedBy: $performedBy
+            );
+            (new NotificationService())->createInternal(
+                subject: 'Caso asignado',
+                body: 'Se ha asignado un caso a ' . $assignedTo . '.',
+                recipientId: $assignedTo,
+                payload: [
+                    'case_id' => $caseId,
+                    'event' => 'case_assigned',
+                    'assigned_to' => $assignedTo,
+                ]
             );
         }
 
