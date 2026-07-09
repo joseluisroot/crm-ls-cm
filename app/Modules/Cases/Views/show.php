@@ -73,6 +73,67 @@
 
         <div class="border-t pt-6 mt-8">
             <h4 class="text-xl font-bold text-slate-900 mb-5">
+                Gestión del caso
+            </h4>
+
+            <?php if (session()->getFlashdata('success')): ?>
+                <div class="bg-green-100 text-green-700 rounded-xl p-4 mb-5 text-sm">
+                    <?= esc(session()->getFlashdata('success')) ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if (session()->getFlashdata('error')): ?>
+                <div class="bg-red-100 text-red-700 rounded-xl p-4 mb-5 text-sm">
+                    <?= esc(session()->getFlashdata('error')) ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <form method="post" action="/admin/cases/<?= esc($case['id']) ?>/change-status" class="bg-slate-50 rounded-xl p-5">
+                    <?= csrf_field() ?>
+
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        Cambiar estado
+                    </label>
+
+                    <select name="status_id" class="w-full border border-slate-300 rounded-xl px-4 py-3 mb-4">
+                        <?php foreach ($statuses as $status): ?>
+                            <option value="<?= esc($status['id']) ?>" <?= (int)$case['status_id'] === (int)$status['id'] ? 'selected' : '' ?>>
+                                <?= esc($status['name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+
+                    <button class="bg-pink-600 hover:bg-pink-700 text-white font-bold px-5 py-3 rounded-xl">
+                        Actualizar estado
+                    </button>
+                </form>
+
+                <form method="post" action="/admin/cases/<?= esc($case['id']) ?>/assign" class="bg-slate-50 rounded-xl p-5">
+                    <?= csrf_field() ?>
+
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        Asignar responsable
+                    </label>
+
+                    <input
+                            type="text"
+                            name="assigned_to"
+                            value="<?= esc($case['assigned_to'] ?? '') ?>"
+                            class="w-full border border-slate-300 rounded-xl px-4 py-3 mb-4"
+                            placeholder="Nombre del responsable">
+
+                    <button class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-5 py-3 rounded-xl">
+                        Asignar caso
+                    </button>
+                </form>
+
+            </div>
+        </div>
+
+        <div class="border-t pt-6 mt-8">
+            <h4 class="text-xl font-bold text-slate-900 mb-5">
                 Línea de tiempo del caso
             </h4>
 

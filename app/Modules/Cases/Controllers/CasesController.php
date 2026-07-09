@@ -8,6 +8,7 @@ use Modules\Cases\Models\CaseStatusModel;
 use Modules\Citizens\Models\CitizenModel;
 use Modules\Cases\Models\CaseHistoryModel;
 use App\Controllers\BaseController;
+use Modules\CaseEngine\Services\CaseLifecycleService;
 
 class CasesController extends BaseController
 {
@@ -71,6 +72,10 @@ class CasesController extends BaseController
             ->orderBy('created_at', 'ASC')
             ->findAll();
 
+        $statuses = (new CaseStatusModel())
+            ->orderBy('id', 'ASC')
+            ->findAll();
+
         if (!$case) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Caso no encontrado');
         }
@@ -79,6 +84,43 @@ class CasesController extends BaseController
             'title' => 'Detalle del caso',
             'case' => $case,
             'history' => $history,
+            'statuses' => $statuses,
         ]);
+    }
+
+    public function changeStatus($id)
+    {
+        $statusId = (int) $this->request->getPost('status_id');
+
+        if ($statusId <= 0) {
+            return redirect()->back()->with('error', 'Selecciona un estado válido.');
+        }
+
+        (new CaseLifecycleService())->changeStatus(
+            caseId: (int) $id,
+            statusId: $statusId,
+            description: 'Estado actualizado desde el panel administrativo.',
+            performedBy: session()->get('admin_user_name') ?? 'admin'
+        );
+
+        return redirect()->back()->with('success', 'Estado del caso actualizado.');
+    }
+
+    public function assign($id)
+    {
+        $assignedTo = trim((string) $this->request->getPost('assigned_to'));
+
+        if ($assignedTo === '') {
+            return redirect()->back()->with('error', 'Ingresa un responsable.');
+        }
+
+        (new CaseLifecycleService())->assign(
+            caseId: (int) $id,
+            assignedTo: $assignedTo,
+            description: 'Caso asignado desde el panel administrativo.',
+            performedBy: session()->get('admin_user_name') ?? 'admin'
+        );
+
+        return redirect()->back()->with('success', 'Caso asignado correctamente.');
     }
 }

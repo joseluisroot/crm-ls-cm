@@ -26,6 +26,9 @@ $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
     $routes->get('cases/(:num)', '\Modules\Cases\Controllers\CasesController::show/$1');
 
     $routes->get('messenger/events', '\Modules\Messenger\Controllers\MessengerEventsController::index');
+
+    $routes->post('cases/(:num)/change-status', '\Modules\Cases\Controllers\CasesController::changeStatus/$1');
+    $routes->post('cases/(:num)/assign', '\Modules\Cases\Controllers\CasesController::assign/$1');
 });
 
 $routes->get('webhooks/messenger', '\Modules\Messenger\Controllers\WebhookController::verify');
