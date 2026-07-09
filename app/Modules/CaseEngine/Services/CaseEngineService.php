@@ -5,6 +5,7 @@ namespace Modules\CaseEngine\Services;
 use Modules\Cases\Models\CaseModel;
 use Modules\Cases\Models\CategoryModel;
 use Modules\Cases\Models\CaseStatusModel;
+use Modules\CaseEngine\Support\CaseCodeGenerator;
 
 class CaseEngineService
 {
@@ -32,6 +33,7 @@ class CaseEngineService
         }
 
         $caseId = (new CaseModel())->insert([
+            'public_code' => (new CaseCodeGenerator())->generate(),
             'citizen_id'  => $citizenId,
             'category_id' => $category['id'] ?? null,
             'status_id'   => $status['id'],

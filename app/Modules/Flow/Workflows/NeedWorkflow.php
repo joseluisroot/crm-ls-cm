@@ -55,7 +55,7 @@ class NeedWorkflow
             $contextService->put($conversationId, 'description', trim((string) $text));
 
             return new FlowResponseDTO(
-                text: "❤️ Gracias por compartirnos tu situación.\n\nTu mensaje ya quedó registrado para seguimiento ciudadano.\n\nNuestro equipo revisará la información y la incorporará al proceso de atención.\n\nSabemos que detrás de cada reporte hay personas, familias y comunidades que desean ser escuchadas.\n\n¿Deseas hacer algo más?",
+                text: "❤️ Gracias por compartirnos tu situación.\n\nTu reporte ya quedó registrado para seguimiento ciudadano.\n\nNuestro equipo revisará la información y la incorporará al proceso de atención.\n\nSabemos que detrás de cada reporte hay personas, familias y comunidades que desean ser escuchadas.\n\n¿Deseas hacer algo más?",
                 quickReplies: [
                     ['title' => 'Reportar otra necesidad', 'payload' => 'OPTION_NEED'],
                     ['title' => 'Compartir propuesta', 'payload' => 'OPTION_PROPOSAL'],

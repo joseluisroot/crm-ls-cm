@@ -10,6 +10,7 @@ class CaseModel extends Model
     protected $primaryKey = 'id';
 
     protected $allowedFields = [
+        'public_code',
         'citizen_id',
         'category_id',
         'status_id',
