@@ -71,6 +71,48 @@
             </div>
         </div>
 
+        <div class="border-t pt-6 mt-8">
+            <h4 class="text-xl font-bold text-slate-900 mb-5">
+                Línea de tiempo del caso
+            </h4>
+
+            <?php if (empty($history)): ?>
+                <div class="bg-slate-50 rounded-xl p-5 text-slate-500">
+                    Aún no hay movimientos registrados para este caso.
+                </div>
+            <?php else: ?>
+                <div class="space-y-5">
+                    <?php foreach ($history as $item): ?>
+                        <div class="flex gap-4">
+                            <div class="w-3 h-3 mt-2 rounded-full bg-pink-600"></div>
+
+                            <div class="flex-1 bg-slate-50 rounded-xl p-5">
+                                <div class="flex justify-between items-start gap-4">
+                                    <div>
+                                        <p class="font-bold text-slate-900">
+                                            <?= esc($item['event']) ?>
+                                        </p>
+
+                                        <p class="text-slate-600 mt-1">
+                                            <?= esc($item['description'] ?? '') ?>
+                                        </p>
+                                    </div>
+
+                                    <span class="text-xs text-slate-400 whitespace-nowrap">
+                                <?= esc($item['created_at']) ?>
+                            </span>
+                                </div>
+
+                                <p class="text-xs text-slate-400 mt-3">
+                                    Registrado por: <?= esc($item['performed_by'] ?? 'system') ?>
+                                </p>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
     </div>
 
 <?= $this->endSection() ?>

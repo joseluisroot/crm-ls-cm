@@ -44,6 +44,9 @@ class CaseEngineService
             'assigned_to' => null,
         ]);
 
+        (new \Modules\CaseEngine\Services\CaseLifecycleService())
+            ->registerCreated((int) $caseId);
+
         return $caseId ? (int) $caseId : null;
     }
 

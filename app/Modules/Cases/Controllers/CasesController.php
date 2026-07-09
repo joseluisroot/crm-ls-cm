@@ -6,6 +6,7 @@ use Modules\Cases\Models\CaseModel;
 use Modules\Cases\Models\CategoryModel;
 use Modules\Cases\Models\CaseStatusModel;
 use Modules\Citizens\Models\CitizenModel;
+use Modules\Cases\Models\CaseHistoryModel;
 use App\Controllers\BaseController;
 
 class CasesController extends BaseController
@@ -65,6 +66,11 @@ class CasesController extends BaseController
             ->where('cases.id', $id)
             ->first();
 
+        $history = (new CaseHistoryModel())
+            ->where('case_id', $id)
+            ->orderBy('created_at', 'ASC')
+            ->findAll();
+
         if (!$case) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Caso no encontrado');
         }
@@ -72,6 +78,7 @@ class CasesController extends BaseController
         return view('Modules\Cases\Views\show', [
             'title' => 'Detalle del caso',
             'case' => $case,
+            'history' => $history,
         ]);
     }
 }
