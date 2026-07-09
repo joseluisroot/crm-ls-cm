@@ -27,23 +27,26 @@ class MessengerWebhookProcessor
         $payload = $message['quick_reply']['payload'] ?? null;
         $externalMessageId = $message['mid'] ?? null;
 
-        $dto = new \Modules\ConversationEngine\DTO\IncomingMessageDTO(
-            channel: 'messenger',
-            externalUserId: $senderId,
-            text: $text,
-            messageType: isset($message['attachments']) ? 'attachment' : 'text',
-            rawPayload: $event,
-            payload: $payload,
-            externalMessageId: $externalMessageId
-        );
+        $coreResult = (new \Modules\Core\Services\CoreEngine())
+            ->handleIncomingInteraction(
+                new \Modules\Core\DTO\IncomingInteractionDTO(
+                    channel: 'messenger',
+                    externalUserId: $senderId,
+                    externalMessageId: $externalMessageId,
+                    text: $text,
+                    payload: $payload,
+                    messageType: isset($message['attachments']) ? 'attachment' : 'text',
+                    rawPayload: $event,
+                    providerTimestamp: $event['timestamp'] ?? null
+                )
+            );
 
-        $result = (new \Modules\ConversationEngine\Services\ConversationEngineService())
-            ->handleIncomingMessage($dto);
+        $result = $coreResult['results'][0] ?? [];
 
-        /*if (!empty($result['outbound_message_id'])) {
+        if (!empty($result['outbound_message_id'])) {
             (new \Modules\Messenger\Services\MessengerOutboundService())
                 ->sendSuggestedReply($senderId, (int) $result['outbound_message_id']);
-        }*/
+        }
 
         if (!empty($result['suggested_reply'])) {
             // Por ahora solo guardamos la lógica.

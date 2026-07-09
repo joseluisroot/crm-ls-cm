@@ -57,16 +57,6 @@ class MessengerService
 
         $url = "https://graph.facebook.com/{$this->apiVersion}/me/messages";
 
-        $formattedQuickReplies = [];
-
-        foreach ($quickReplies as $reply) {
-            $formattedQuickReplies[] = [
-                'content_type' => 'text',
-                'title' => $reply['title'],
-                'payload' => $reply['payload'],
-            ];
-        }
-
         try {
             $response = $client->post($url, [
                 'query' => [
@@ -81,7 +71,7 @@ class MessengerService
                     ],
                     'message' => [
                         'text' => $text,
-                        'quick_replies' => $formattedQuickReplies,
+                        'quick_replies' => $quickReplies,
                     ],
                 ],
             ]);

@@ -3,6 +3,7 @@
 namespace Modules\Messenger\Services;
 
 use Modules\Conversations\Models\MessageModel;
+use Modules\Interaction\Services\InteractionEngineService;
 
 class MessengerOutboundService
 {
@@ -15,19 +16,17 @@ class MessengerOutboundService
             return false;
         }
 
-        $rawPayload = [];
-
-        if (!empty($message['raw_payload'])) {
-            $rawPayload = json_decode($message['raw_payload'], true) ?: [];
-        }
-
+        $rawPayload = json_decode($message['raw_payload'] ?? '{}', true) ?: [];
         $quickReplies = $rawPayload['quick_replies'] ?? [];
 
         if (!empty($quickReplies)) {
+            $formattedQuickReplies = (new InteractionEngineService())
+                ->buildQuickReplies($quickReplies);
+
             $sent = (new MessengerService())->sendQuickReplies(
                 $recipientId,
                 $message['body'],
-                $quickReplies
+                $formattedQuickReplies
             );
         } else {
             $sent = (new MessengerService())->sendTextMessage(
