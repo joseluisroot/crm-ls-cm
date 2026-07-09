@@ -13,19 +13,20 @@ class ConversationEngineService
     public function handleIncomingMessage(IncomingMessageDTO $dto): array
     {
         $citizen = $this->findOrCreateCitizen($dto);
-        $conversation = $this->findOrCreateConversation((int)$citizen['id'], $dto->channel);
+        $conversation = $this->findOrCreateConversation((int) $citizen['id'], $dto->channel);
 
         $categorySlug = $this->detectInitialCategory($dto->text);
 
-        $outboundMessageId = (new MessageModel())->insert([
+        // Mensaje recibido del ciudadano
+        $messageId = (new MessageModel())->insert([
             'conversation_id' => $conversation['id'],
-            'direction' => 'inbound',
-            'message_type' => $dto->messageType,
-            'body' => $dto->text ?? '[Mensaje sin texto]',
-            'raw_payload' => json_encode($dto->rawPayload),
-            'sentiment' => 'pending',
-            'category' => $categorySlug,
-            'priority' => 'normal',
+            'direction'      => 'inbound',
+            'message_type'    => $dto->messageType,
+            'body'            => $dto->text ?? '[Mensaje sin texto]',
+            'raw_payload'     => json_encode($dto->rawPayload),
+            'sentiment'       => 'pending',
+            'category'        => $categorySlug,
+            'priority'        => 'normal',
         ]);
 
         (new ConversationModel())->update($conversation['id'], [
@@ -37,41 +38,44 @@ class ConversationEngineService
 
         if ($caseEngine->shouldCreateCase($categorySlug)) {
             $caseId = $caseEngine->createCaseFromMessage(
-                citizenId: (int)$citizen['id'],
+                citizenId: (int) $citizen['id'],
                 categorySlug: $categorySlug,
                 messageText: $dto->text ?? ''
             );
         }
 
+        $outboundMessageId = null;
         $suggestedReply = $this->getSuggestedReply($dto->text);
 
+        // Mensaje de respuesta del sistema
         if ($suggestedReply) {
-            (new MessageModel())->insert([
+            $outboundMessageId = (new MessageModel())->insert([
                 'conversation_id' => $conversation['id'],
-                'direction' => 'outbound',
-                'message_type' => 'text',
-                'body' => $suggestedReply,
-                'raw_payload' => json_encode([
+                'direction'      => 'outbound',
+                'message_type'    => 'text',
+                'body'            => $suggestedReply,
+                'raw_payload'     => json_encode([
                     'generated_by' => 'conversation_engine',
-                    'auto_reply' => true,
-                    'sent' => false,
+                    'auto_reply'   => true,
+                    'sent'         => false,
                 ]),
-                'sentiment' => 'system',
-                'category' => $categorySlug,
-                'priority' => 'normal',
-                'sent_status' => 'suggested',
-                'sent_at' => null,
+                'sentiment'      => 'system',
+                'category'       => $categorySlug,
+                'priority'       => 'normal',
+                'sent_status'    => 'suggested',
+                'sent_at'        => null,
                 'delivery_error' => null,
             ]);
         }
 
         return [
-            'citizen' => $citizen,
-            'conversation' => $conversation,
-            'outbound_message_id' => $outboundMessageId ?? null,
-            'case_id' => $caseId,
-            'category' => $categorySlug,
-            'suggested_reply' => $suggestedReply,
+            'citizen'             => $citizen,
+            'conversation'        => $conversation,
+            'message_id'          => $messageId,
+            'outbound_message_id' => $outboundMessageId,
+            'case_id'             => $caseId,
+            'category'            => $categorySlug,
+            'suggested_reply'     => $suggestedReply,
         ];
     }
 
@@ -89,8 +93,8 @@ class ConversationEngineService
 
         $id = $citizenModel->insert([
             'facebook_id' => $dto->externalUserId,
-            'name' => 'Usuario ' . ucfirst($dto->channel) . ' ' . substr($dto->externalUserId, -6),
-            'status' => 'active',
+            'name'        => 'Usuario ' . ucfirst($dto->channel) . ' ' . substr($dto->externalUserId, -6),
+            'status'      => 'active',
         ]);
 
         return $citizenModel->find($id);
@@ -111,9 +115,9 @@ class ConversationEngineService
         }
 
         $id = $conversationModel->insert([
-            'citizen_id' => $citizenId,
-            'channel' => $channel,
-            'status' => 'open',
+            'citizen_id'      => $citizenId,
+            'channel'         => $channel,
+            'status'          => 'open',
             'last_message_at' => date('Y-m-d H:i:s'),
         ]);
 
@@ -122,7 +126,7 @@ class ConversationEngineService
 
     private function detectInitialCategory(?string $text): string
     {
-        $text = trim((string)$text);
+        $text = trim((string) $text);
 
         return match ($text) {
             '1' => 'saludos-felicitaciones',
@@ -137,7 +141,7 @@ class ConversationEngineService
 
     private function getSuggestedReply(?string $text): ?string
     {
-        $text = trim((string)$text);
+        $text = trim((string) $text);
 
         return match ($text) {
             '1' => 'Gracias por tu saludo. Nos alegra mucho recibir tu mensaje.',
