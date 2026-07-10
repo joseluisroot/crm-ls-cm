@@ -34,6 +34,9 @@ $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
 
     $routes->get('notifications', '\Modules\Notification\Controllers\NotificationsController::index');
     $routes->post('notifications/(:num)/read', '\Modules\Notification\Controllers\NotificationsController::markAsRead/$1');
+
+    $routes->get('analytics', '\Modules\Analytics\Controllers\AnalyticsController::index' );
+    $routes->get('analytics/data', '\Modules\Analytics\Controllers\AnalyticsController::data');
 });
 
 $routes->get('webhooks/messenger', '\Modules\Messenger\Controllers\WebhookController::verify');

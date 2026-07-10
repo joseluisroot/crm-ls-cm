@@ -22,7 +22,9 @@
 
         <nav class="space-y-2">
             <a href="/admin" class="block px-4 py-3 rounded-lg hover:bg-slate-800">Dashboard</a>
-
+            <a href="<?= site_url('admin/analytics') ?>"class="block px-4 py-3 rounded-lg hover:bg-slate-800">
+                📊 Centro de Inteligencia
+            </a>
             <a href="/admin/citizens" class="block px-4 py-3 rounded-lg hover:bg-slate-800">Ciudadanos</a>
             <a href="/admin/conversations" class="block px-4 py-3 rounded-lg hover:bg-slate-800">Conversaciones</a>
             <a href="/admin/cases" class="block px-4 py-3 rounded-lg hover:bg-slate-800">Casos</a>
