@@ -19,6 +19,7 @@ class CaseModel extends Model
         'priority',
         'sentiment',
         'assigned_to',
+        'assigned_user_id',
         'closed_at',
     ];
 

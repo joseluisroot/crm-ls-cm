@@ -110,24 +110,64 @@
                     </button>
                 </form>
 
-                <form method="post" action="/admin/cases/<?= esc($case['id']) ?>/assign" class="bg-slate-50 rounded-xl p-5">
+                <form
+                        method="post"
+                        action="<?= site_url('admin/cases/' . $case['id'] . '/assign') ?>"
+                        class="bg-slate-50 rounded-xl p-5"
+                >
                     <?= csrf_field() ?>
 
                     <label class="block text-sm font-semibold text-slate-700 mb-2">
-                        Asignar responsable
+                        Responsable del caso
                     </label>
 
-                    <input
-                            type="text"
-                            name="assigned_to"
-                            value="<?= esc($case['assigned_to'] ?? '') ?>"
-                            class="w-full border border-slate-300 rounded-xl px-4 py-3 mb-4"
-                            placeholder="Nombre del responsable">
+                    <select
+                            name="assigned_user_id"
+                            required
+                            class="w-full border border-slate-300 rounded-xl px-4 py-3 mb-4 bg-white"
+                    >
+                        <option value="">Seleccionar responsable</option>
 
-                    <button class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-5 py-3 rounded-xl">
-                        Asignar caso
-                    </button>
+                        <?php foreach ($assignableUsers as $user): ?>
+                            <option
+                                    value="<?= esc($user['id']) ?>"
+                                    <?= (int) ($case['assigned_user_id'] ?? 0) === (int) $user['id']
+                                            ? 'selected'
+                                            : '' ?>
+                            >
+                                <?= esc($user['name']) ?>
+                                — <?= esc($user['role']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+
+                    <div class="flex flex-wrap gap-3">
+                        <button
+                                type="submit"
+                                class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-5 py-3 rounded-xl"
+                        >
+                            Asignar caso
+                        </button>
+                    </div>
                 </form>
+
+                <?php if (!empty($case['assigned_user_id'])): ?>
+                    <form
+                            method="post"
+                            action="<?= site_url('admin/cases/' . $case['id'] . '/unassign') ?>"
+                            class="mt-3"
+                    >
+                        <?= csrf_field() ?>
+
+                        <button
+                                type="submit"
+                                class="text-sm font-semibold text-red-600 hover:text-red-700"
+                                onclick="return confirm('¿Deseas retirar el responsable asignado?')"
+                        >
+                            Retirar asignación
+                        </button>
+                    </form>
+                <?php endif; ?>
 
             </div>
         </div>

@@ -29,6 +29,8 @@ $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
 
     $routes->post('cases/(:num)/change-status', '\Modules\Cases\Controllers\CasesController::changeStatus/$1');
     $routes->post('cases/(:num)/assign', '\Modules\Cases\Controllers\CasesController::assign/$1');
+    $routes->post('cases/(:num)/unassign', '\Modules\Cases\Controllers\CasesController::unassign/$1');
+    $routes->get('my-cases', '\Modules\Cases\Controllers\CasesController::myCases');
 
     $routes->get('notifications', '\Modules\Notification\Controllers\NotificationsController::index');
     $routes->post('notifications/(:num)/read', '\Modules\Notification\Controllers\NotificationsController::markAsRead/$1');

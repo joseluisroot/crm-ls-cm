@@ -22,11 +22,15 @@
 
         <nav class="space-y-2">
             <a href="/admin" class="block px-4 py-3 rounded-lg hover:bg-slate-800">Dashboard</a>
+
             <a href="/admin/citizens" class="block px-4 py-3 rounded-lg hover:bg-slate-800">Ciudadanos</a>
             <a href="/admin/conversations" class="block px-4 py-3 rounded-lg hover:bg-slate-800">Conversaciones</a>
             <a href="/admin/cases" class="block px-4 py-3 rounded-lg hover:bg-slate-800">Casos</a>
+            <a href="<?= site_url('admin/my-cases') ?>" class="block px-4 py-3 rounded-lg hover:bg-slate-800">📋 Mis
+                casos</a>
             <a href="/admin/messenger/events" class="block px-4 py-3 rounded-lg hover:bg-slate-800">Messenger</a>
             <a href="/admin/notifications" class="block px-4 py-3 rounded-lg hover:bg-slate-800">🔔 Notificaciones</a>
+
         </nav>
         <div class="mt-10 border-t border-slate-800 pt-6">
             <p class="text-sm text-slate-400 mb-3">

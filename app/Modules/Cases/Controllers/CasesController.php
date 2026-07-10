@@ -9,6 +9,9 @@ use Modules\Citizens\Models\CitizenModel;
 use Modules\Cases\Models\CaseHistoryModel;
 use App\Controllers\BaseController;
 use Modules\CaseEngine\Services\CaseLifecycleService;
+use Modules\Assignment\Exceptions\AssignmentException;
+use Modules\Assignment\Services\AssignmentEngineService;
+use Modules\Auth\Models\AdminUserModel;
 
 class CasesController extends BaseController
 {
@@ -76,6 +79,11 @@ class CasesController extends BaseController
             ->orderBy('id', 'ASC')
             ->findAll();
 
+        $assignableUsers = (new AdminUserModel())
+            ->where('status', 'active')
+            ->orderBy('name', 'ASC')
+            ->findAll();
+
         if (!$case) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Caso no encontrado');
         }
@@ -85,6 +93,7 @@ class CasesController extends BaseController
             'case' => $case,
             'history' => $history,
             'statuses' => $statuses,
+            'assignableUsers' => $assignableUsers,
         ]);
     }
 
@@ -108,19 +117,82 @@ class CasesController extends BaseController
 
     public function assign($id)
     {
-        $assignedTo = trim((string) $this->request->getPost('assigned_to'));
+        $userId = (int) $this->request->getPost('assigned_user_id');
 
-        if ($assignedTo === '') {
-            return redirect()->back()->with('error', 'Ingresa un responsable.');
+        if ($userId <= 0) {
+            return redirect()
+                ->back()
+                ->with('error', 'Selecciona un responsable válido.');
         }
 
-        (new CaseLifecycleService())->assign(
-            caseId: (int) $id,
-            assignedTo: $assignedTo,
-            description: 'Caso asignado desde el panel administrativo.',
-            performedBy: session()->get('admin_user_name') ?? 'admin'
-        );
+        try {
+            (new AssignmentEngineService())->assignCase(
+                caseId: (int) $id,
+                userId: $userId,
+                performedByUserId: (int) session()->get('admin_user_id')
+            );
 
-        return redirect()->back()->with('success', 'Caso asignado correctamente.');
+            return redirect()
+                ->back()
+                ->with('success', 'Caso asignado correctamente.');
+        } catch (AssignmentException $e) {
+            return redirect()
+                ->back()
+                ->with('error', $e->getMessage());
+        } catch (\Throwable $e) {
+            log_message(
+                'error',
+                'Error asignando caso: ' . $e->getMessage()
+            );
+
+            return redirect()
+                ->back()
+                ->with(
+                    'error',
+                    'Ocurrió un error al asignar el caso.'
+                );
+        }
+    }
+    public function unassign($id)
+    {
+        try {
+            (new AssignmentEngineService())->unassignCase(
+                caseId: (int) $id,
+                performedByUserId: (int) session()->get('admin_user_id')
+            );
+
+            return redirect()
+                ->back()
+                ->with('success', 'Asignación retirada correctamente.');
+        } catch (AssignmentException $e) {
+            return redirect()
+                ->back()
+                ->with('error', $e->getMessage());
+        } catch (\Throwable $e) {
+            log_message(
+                'error',
+                'Error retirando asignación: ' . $e->getMessage()
+            );
+
+            return redirect()
+                ->back()
+                ->with(
+                    'error',
+                    'No fue posible retirar la asignación.'
+                );
+        }
+    }
+
+    public function myCases()
+    {
+        $userId = (int) session()->get('admin_user_id');
+
+        $cases = (new AssignmentEngineService())
+            ->getUserCases($userId);
+
+        return view('Modules\Cases\Views\my_cases', [
+            'title' => 'Mis casos asignados',
+            'cases' => $cases,
+        ]);
     }
 }
