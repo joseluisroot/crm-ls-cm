@@ -10,7 +10,7 @@ class Workflow extends BaseConfig
      * Permite activar o desactivar globalmente
      * el Dynamic Workflow Engine.
      */
-    public bool $dynamicEngineEnabled = false;
+    public bool $dynamicEngineEnabled = true;
 
     /**
      * Workflow principal para atención ciudadana.
