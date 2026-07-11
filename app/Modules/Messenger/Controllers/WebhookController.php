@@ -3,8 +3,10 @@
 namespace Modules\Messenger\Controllers;
 
 use App\Controllers\BaseController;
+use Modules\Engagement\Services\PublicEngagementProcessor;
 use Modules\Messenger\Models\WebhookEventModel;
 use Modules\Messenger\Services\MessengerWebhookProcessor;
+use Throwable;
 
 class WebhookController extends BaseController
 {
@@ -41,6 +43,12 @@ class WebhookController extends BaseController
         foreach ($payload['entry'] ?? [] as $entry) {
             foreach ($entry['messaging'] ?? [] as $event) {
                 $this->storeAndProcessEvent($event);
+            }
+
+            $pageId = (string) ($entry['id'] ?? '');
+
+            foreach ($entry['changes'] ?? [] as $change) {
+                $this->processPageChange($pageId, $change);
             }
         }
 
@@ -93,5 +101,17 @@ class WebhookController extends BaseController
             'processed' => 1,
             //'processed_at' => date('Y-m-d H:i:s'),
         ]);
+    }
+
+    private function processPageChange(string $pageId, array $change): void
+    {
+        try {
+            (new PublicEngagementProcessor())->process($pageId, $change);
+        } catch (Throwable $error) {
+            log_message(
+                'error',
+                'Public Engagement webhook error: ' . $error->getMessage()
+            );
+        }
     }
 }
