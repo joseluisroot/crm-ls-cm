@@ -19,6 +19,13 @@
 
         <div class="flex flex-wrap gap-3">
             <a
+                href="<?= site_url('admin/workflows/runtime') ?>"
+                class="px-5 py-3 rounded-xl border border-pink-200 bg-pink-50 text-pink-700 font-bold"
+            >
+                ▶ Runtime Inspector
+            </a>
+
+            <a
                 href="<?= site_url('admin/workflows/simulator') ?>"
                 class="px-5 py-3 rounded-xl border border-slate-300 bg-white text-slate-700 font-bold"
             >
