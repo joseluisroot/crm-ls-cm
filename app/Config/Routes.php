@@ -39,6 +39,16 @@ $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
     $routes->get('analytics/data', '\Modules\Analytics\Controllers\AnalyticsController::data');
 
     $routes->get(
+        'engagement',
+        '\Modules\Engagement\Controllers\EngagementCenterController::index'
+    );
+
+    $routes->get(
+        'engagement/participants',
+        '\Modules\Engagement\Controllers\EngagementCenterController::participants'
+    );
+
+    $routes->get(
         'workflows/runtime',
         '\Modules\Workflow\Controllers\RuntimeInspectorController::index'
     );
@@ -192,5 +202,3 @@ $routes->post('webhooks/messenger', '\Modules\Messenger\Controllers\WebhookContr
 
 $routes->get('system/migrate', 'SystemController::migrate');
 $routes->get('system/seed/(:segment)', 'SystemController::seed/$1');
-
-
