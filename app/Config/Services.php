@@ -7,6 +7,7 @@ use Modules\Core\Event\Models\SystemEventModel;
 use Modules\Core\Event\Services\EventDispatcher;
 use Modules\Core\Event\Services\EventEngine;
 use Modules\Core\Event\Services\EventRegistry;
+use Modules\Workflow\Services\RuntimeInspectorSubscriber;
 
 class Services extends BaseService
 {
@@ -16,7 +17,10 @@ class Services extends BaseService
             return static::getSharedInstance('eventRegistry');
         }
 
-        return new EventRegistry();
+        $registry = new EventRegistry();
+        $registry->subscribe(new RuntimeInspectorSubscriber());
+
+        return $registry;
     }
 
     public static function eventDispatcher(bool $getShared = true): EventDispatcher
