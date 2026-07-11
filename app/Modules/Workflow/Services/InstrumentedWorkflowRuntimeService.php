@@ -2,6 +2,7 @@
 
 namespace Modules\Workflow\Services;
 
+use Modules\ConversationEngine\Services\ConversationContextService;
 use Modules\Workflow\DTO\WorkflowResponseDTO;
 use Modules\Workflow\Repositories\WorkflowRepository;
 use Throwable;
@@ -15,40 +16,24 @@ class InstrumentedWorkflowRuntimeService
     ) {
     }
 
-    public function start(
-        int $conversationId,
-        string $workflowSlug,
-        string $channel = 'messenger'
-    ): WorkflowResponseDTO {
-        $response = $this->runtime->start(
-            $conversationId,
-            $workflowSlug,
-            $channel
-        );
-
+    public function start(int $conversationId, string $workflowSlug, string $channel = 'messenger'): WorkflowResponseDTO
+    {
+        $response = $this->runtime->start($conversationId, $workflowSlug, $channel);
         $execution = $this->repository->findExecution($response->executionId);
 
         if ($execution) {
             $this->publisher->workflowStarted($execution);
-            $node = $this->repository->findNode(
-                (int) $execution['workflow_version_id'],
-                $response->currentNodeKey
-            );
+            $node = $this->repository->findNode((int) $execution['workflow_version_id'], $response->currentNodeKey);
 
             if ($node) {
                 $startedAt = microtime(true);
                 $this->publisher->nodeStarted($execution, $node);
-                $this->publisher->nodeCompleted(
-                    $execution,
-                    $node,
-                    $startedAt,
-                    [
-                        'snapshot' => [
-                            'response' => $this->responseSnapshot($response),
-                            'execution' => $execution,
-                        ],
-                    ]
-                );
+                $this->publisher->nodeCompleted($execution, $node, $startedAt, [
+                    'snapshot' => [
+                        'response' => $this->responseSnapshot($response),
+                        'execution' => $execution,
+                    ],
+                ]);
             }
 
             if ($response->completed) {
@@ -59,11 +44,8 @@ class InstrumentedWorkflowRuntimeService
         return $response;
     }
 
-    public function handle(
-        int $conversationId,
-        ?string $text = null,
-        ?string $payload = null
-    ): WorkflowResponseDTO {
+    public function handle(int $conversationId, ?string $text = null, ?string $payload = null): WorkflowResponseDTO
+    {
         $execution = $this->repository->findRunningExecution($conversationId);
         $node = $execution ? $this->repository->findNode(
             (int) $execution['workflow_version_id'],
@@ -76,40 +58,22 @@ class InstrumentedWorkflowRuntimeService
         }
 
         try {
-            $response = $this->runtime->handle(
-                $conversationId,
-                $text,
-                $payload
-            );
+            $response = $this->runtime->handle($conversationId, $text, $payload);
 
             if ($execution && $node) {
-                $context = (new ConversationContextService())->all(
-                    (int) $execution['conversation_id']
-                );
-
-                $this->publisher->nodeCompleted(
-                    $execution,
-                    $node,
-                    $startedAt,
-                    [
-                        'variables' => $this->variables($context),
-                        'snapshot' => [
-                            'input' => [
-                                'text' => $text,
-                                'payload' => $payload,
-                            ],
-                            'context' => $context,
-                            'response' => $this->responseSnapshot($response),
-                        ],
-                    ]
-                );
+                $context = (new ConversationContextService())->all((int) $execution['conversation_id']);
+                $this->publisher->nodeCompleted($execution, $node, $startedAt, [
+                    'variables' => $this->variables($context),
+                    'snapshot' => [
+                        'input' => ['text' => $text, 'payload' => $payload],
+                        'context' => $context,
+                        'response' => $this->responseSnapshot($response),
+                    ],
+                ]);
             }
 
             if ($response->completed) {
-                $completedExecution = $this->repository->findExecution(
-                    $response->executionId
-                ) ?? $execution;
-
+                $completedExecution = $this->repository->findExecution($response->executionId) ?? $execution;
                 if ($completedExecution) {
                     $this->publisher->workflowCompleted($completedExecution);
                 }
@@ -118,12 +82,7 @@ class InstrumentedWorkflowRuntimeService
             return $response;
         } catch (Throwable $error) {
             if ($execution && $node) {
-                $this->publisher->nodeFailed(
-                    $execution,
-                    $node,
-                    $startedAt,
-                    $error
-                );
+                $this->publisher->nodeFailed($execution, $node, $startedAt, $error);
                 $this->publisher->workflowFailed($execution, $error);
             }
 
@@ -145,7 +104,6 @@ class InstrumentedWorkflowRuntimeService
     private function variables(array $context): array
     {
         $variables = [];
-
         foreach ($context as $name => $value) {
             $variables[] = [
                 'name' => (string) $name,
@@ -154,7 +112,6 @@ class InstrumentedWorkflowRuntimeService
                 'new_value' => $value,
             ];
         }
-
         return $variables;
     }
 }
