@@ -39,6 +39,31 @@ $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
     $routes->get('analytics/data', '\Modules\Analytics\Controllers\AnalyticsController::data');
 
     $routes->get(
+        'workflows/runtime',
+        '\Modules\Workflow\Controllers\RuntimeInspectorController::index'
+    );
+
+    $routes->get(
+        'workflows/runtime/(:num)',
+        '\Modules\Workflow\Controllers\RuntimeInspectorController::show/$1'
+    );
+
+    $routes->get(
+        'api/workflows/runtime',
+        '\Modules\Workflow\Controllers\RuntimeInspectorController::apiIndex'
+    );
+
+    $routes->get(
+        'api/workflows/runtime/(:num)',
+        '\Modules\Workflow\Controllers\RuntimeInspectorController::apiShow/$1'
+    );
+
+    $routes->get(
+        'api/workflows/runtime/(:num)/timeline',
+        '\Modules\Workflow\Controllers\RuntimeInspectorController::timeline/$1'
+    );
+
+    $routes->get(
         'workflows/simulator',
         '\Modules\Workflow\Controllers\WorkflowSimulatorController::index'
     );
@@ -167,7 +192,5 @@ $routes->post('webhooks/messenger', '\Modules\Messenger\Controllers\WebhookContr
 
 $routes->get('system/migrate', 'SystemController::migrate');
 $routes->get('system/seed/(:segment)', 'SystemController::seed/$1');
-
-
 
 
