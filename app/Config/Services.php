@@ -3,30 +3,40 @@
 namespace Config;
 
 use CodeIgniter\Config\BaseService;
+use Modules\Core\Event\Models\SystemEventModel;
+use Modules\Core\Event\Services\EventDispatcher;
+use Modules\Core\Event\Services\EventEngine;
+use Modules\Core\Event\Services\EventRegistry;
 
-/**
- * Services Configuration file.
- *
- * Services are simply other classes/libraries that the system uses
- * to do its job. This is used by CodeIgniter to allow the core of the
- * framework to be swapped out easily without affecting the usage within
- * the rest of your application.
- *
- * This file holds any application-specific services, or service overrides
- * that you might need. An example has been included with the general
- * method format you should use for your service methods. For more examples,
- * see the core Services file at system/Config/Services.php.
- */
 class Services extends BaseService
 {
-    /*
-     * public static function example($getShared = true)
-     * {
-     *     if ($getShared) {
-     *         return static::getSharedInstance('example');
-     *     }
-     *
-     *     return new \CodeIgniter\Example();
-     * }
-     */
+    public static function eventRegistry(bool $getShared = true): EventRegistry
+    {
+        if ($getShared) {
+            return static::getSharedInstance('eventRegistry');
+        }
+
+        return new EventRegistry();
+    }
+
+    public static function eventDispatcher(bool $getShared = true): EventDispatcher
+    {
+        if ($getShared) {
+            return static::getSharedInstance('eventDispatcher');
+        }
+
+        return new EventDispatcher(static::eventRegistry());
+    }
+
+    public static function eventEngine(bool $getShared = true): EventEngine
+    {
+        if ($getShared) {
+            return static::getSharedInstance('eventEngine');
+        }
+
+        return new EventEngine(
+            static::eventDispatcher(),
+            new SystemEventModel(),
+        );
+    }
 }
