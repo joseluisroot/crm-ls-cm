@@ -9,8 +9,7 @@ class SystemEventModel extends Model
     protected $table = 'system_events';
     protected $primaryKey = 'id';
     protected $returnType = 'array';
-    protected $useTimestamps = true;
-    protected $updatedField = '';
+    protected $useTimestamps = false;
 
     protected $allowedFields = [
         'event_uuid',
