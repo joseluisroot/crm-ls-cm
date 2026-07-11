@@ -56,7 +56,12 @@ class ConversationEngineService
         $caseId = null;
         $caseEngine = new CaseEngineService();
 
-        if ($caseEngine->shouldCreateCase($categorySlug)) {
+        $workflowConfig = config('Workflow');
+
+        if (
+            !$workflowConfig->dynamicEngineEnabled
+            && $caseEngine->shouldCreateCase($categorySlug)
+        ) {
             $caseId = $caseEngine->createCaseFromMessage(
                 citizenId: (int) $citizen['id'],
                 categorySlug: $categorySlug,
@@ -64,15 +69,18 @@ class ConversationEngineService
             );
         }
 
-        $outboundMessageId = (new FlowEngineService())->handle([
-            'citizen' => $citizen,
-            'conversation' => $conversation,
-            'message_id' => $messageId,
-            'case_id' => $caseId,
-            'category' => $categorySlug,
-            'text' => $dto->text,
-            'payload' => $dto->payload,
-        ]);
+        $flowResult = (new \Modules\Flow\Services\FlowAdapterService())
+            ->handle([
+                'citizen' => $citizen,
+                'conversation' => $conversation,
+                'message_id' => $messageId,
+                'case_id' => $caseId,
+                'category' => $categorySlug,
+                'text' => $dto->text,
+                'payload' => $dto->payload,
+            ]);
+
+        $outboundMessageId = $flowResult->outboundMessageId;
 
         return [
             'citizen'             => $citizen,
@@ -81,6 +89,8 @@ class ConversationEngineService
             'outbound_message_id' => $outboundMessageId,
             'case_id'             => $caseId,
             'category'            => $categorySlug,
+            'flow_engine' => $flowResult->engine,
+            'flow_completed' => $flowResult->completed,
         ];
     }
 
