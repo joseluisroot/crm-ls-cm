@@ -7,6 +7,7 @@ use Modules\Workflow\Models\WorkflowVersionModel;
 use Modules\Workflow\Repositories\WorkflowRepository;
 use Modules\Workflow\Support\WorkflowException;
 use Modules\Workflow\Support\WorkflowStatus;
+use Modules\Workflow\Services\WorkflowValidatorService;
 
 class WorkflowPublishingService
 {
@@ -29,6 +30,21 @@ class WorkflowPublishingService
         if (!$version || (int) $version['workflow_id'] !== $workflowId) {
             throw new WorkflowException(
                 'La versión seleccionada no pertenece al flujo.'
+            );
+        }
+
+        $validation = (new WorkflowValidatorService())
+            ->validateVersion($versionId);
+
+        if (!$validation->isValid()) {
+            $messages = array_map(
+                static fn(array $error): string => $error['message'],
+                $validation->errors
+            );
+
+            throw new WorkflowException(
+                "La versión no puede publicarse:\n- "
+                . implode("\n- ", $messages)
             );
         }
 
