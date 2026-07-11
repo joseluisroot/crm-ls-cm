@@ -7,7 +7,12 @@ use Modules\Core\Event\Models\SystemEventModel;
 use Modules\Core\Event\Services\EventDispatcher;
 use Modules\Core\Event\Services\EventEngine;
 use Modules\Core\Event\Services\EventRegistry;
+use Modules\Workflow\Repositories\WorkflowRepository;
+use Modules\Workflow\Services\InstrumentedWorkflowRuntimeService;
+use Modules\Workflow\Services\RuntimeInspectorQueryService;
 use Modules\Workflow\Services\RuntimeInspectorSubscriber;
+use Modules\Workflow\Services\WorkflowRuntimeEventPublisher;
+use Modules\Workflow\Services\WorkflowRuntimeService;
 
 class Services extends BaseService
 {
@@ -42,5 +47,36 @@ class Services extends BaseService
             static::eventDispatcher(),
             new SystemEventModel(),
         );
+    }
+
+    public static function workflowRuntimeEventPublisher(bool $getShared = true): WorkflowRuntimeEventPublisher
+    {
+        if ($getShared) {
+            return static::getSharedInstance('workflowRuntimeEventPublisher');
+        }
+
+        return new WorkflowRuntimeEventPublisher(static::eventEngine());
+    }
+
+    public static function instrumentedWorkflowRuntime(bool $getShared = true): InstrumentedWorkflowRuntimeService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('instrumentedWorkflowRuntime');
+        }
+
+        return new InstrumentedWorkflowRuntimeService(
+            new WorkflowRuntimeService(),
+            new WorkflowRepository(),
+            static::workflowRuntimeEventPublisher(),
+        );
+    }
+
+    public static function runtimeInspectorQuery(bool $getShared = true): RuntimeInspectorQueryService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('runtimeInspectorQuery');
+        }
+
+        return new RuntimeInspectorQueryService(db_connect());
     }
 }

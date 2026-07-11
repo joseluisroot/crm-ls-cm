@@ -5,7 +5,7 @@ namespace Modules\Flow\Services;
 use Config\Workflow as WorkflowConfig;
 use Modules\Conversations\Models\MessageModel;
 use Modules\Flow\DTO\FlowAdapterResponseDTO;
-use Modules\Workflow\Services\WorkflowRuntimeService;
+use Modules\Workflow\Services\InstrumentedWorkflowRuntimeService;
 use Modules\Workflow\Support\WorkflowException;
 use Throwable;
 
@@ -13,9 +13,8 @@ class FlowAdapterService
 {
     private WorkflowConfig $config;
 
-    public function __construct(
-        ?WorkflowConfig $config = null
-    ) {
+    public function __construct(?WorkflowConfig $config = null)
+    {
         $this->config = $config ?? config('Workflow');
     }
 
@@ -28,29 +27,21 @@ class FlowAdapterService
         try {
             return $this->handleDynamicWorkflow($context);
         } catch (Throwable $e) {
-            log_message(
-                'error',
-                'Dynamic Workflow Engine error: ' . $e->getMessage()
-            );
+            log_message('error', 'Dynamic Workflow Engine error: ' . $e->getMessage());
 
             if (!$this->config->fallbackToLegacyFlow) {
                 throw $e;
             }
 
-            log_message(
-                'warning',
-                'Se utilizará el Flow Engine clásico como fallback.'
-            );
+            log_message('warning', 'Se utilizará el Flow Engine clásico como fallback.');
 
             return $this->handleLegacyFlow($context);
         }
     }
 
-    private function handleLegacyFlow(
-        array $context
-    ): FlowAdapterResponseDTO {
-        $outboundMessageId = (new FlowEngineService())
-            ->handle($context);
+    private function handleLegacyFlow(array $context): FlowAdapterResponseDTO
+    {
+        $outboundMessageId = (new FlowEngineService())->handle($context);
 
         return new FlowAdapterResponseDTO(
             outboundMessageId: $outboundMessageId,
@@ -58,9 +49,8 @@ class FlowAdapterService
         );
     }
 
-    private function handleDynamicWorkflow(
-        array $context
-    ): FlowAdapterResponseDTO {
+    private function handleDynamicWorkflow(array $context): FlowAdapterResponseDTO
+    {
         $conversation = $context['conversation'] ?? null;
 
         if (!$conversation || empty($conversation['id'])) {
@@ -74,11 +64,10 @@ class FlowAdapterService
         $payload = $context['payload'] ?? null;
         $channel = $conversation['channel'] ?? 'messenger';
 
-        $runtime = new WorkflowRuntimeService();
+        /** @var InstrumentedWorkflowRuntimeService $runtime */
+        $runtime = service('instrumentedWorkflowRuntime');
 
-        $runningExecution = $this->hasRunningExecution(
-            $conversationId
-        );
+        $runningExecution = $this->hasRunningExecution($conversationId);
 
         if ($runningExecution) {
             $response = $runtime->handle(
@@ -120,9 +109,8 @@ class FlowAdapterService
         );
     }
 
-    private function hasRunningExecution(
-        int $conversationId
-    ): bool {
+    private function hasRunningExecution(int $conversationId): bool
+    {
         return db_connect()
                 ->table('workflow_executions')
                 ->where('conversation_id', $conversationId)
