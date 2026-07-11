@@ -35,131 +35,43 @@ $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
     $routes->get('notifications', '\Modules\Notification\Controllers\NotificationsController::index');
     $routes->post('notifications/(:num)/read', '\Modules\Notification\Controllers\NotificationsController::markAsRead/$1');
 
-    $routes->get('analytics', '\Modules\Analytics\Controllers\AnalyticsController::index' );
+    $routes->get('analytics', '\Modules\Analytics\Controllers\AnalyticsController::index');
     $routes->get('analytics/data', '\Modules\Analytics\Controllers\AnalyticsController::data');
 
-    $routes->get(
-        'workflows/simulator',
-        '\Modules\Workflow\Controllers\WorkflowSimulatorController::index'
-    );
+    $routes->get('workflows/runtime', '\Modules\Workflow\Controllers\RuntimeInspectorController::index');
+    $routes->get('workflows/runtime/(:num)', '\Modules\Workflow\Controllers\RuntimeInspectorController::show/$1');
+    $routes->get('api/workflows/runtime', '\Modules\Workflow\Controllers\RuntimeInspectorController::apiIndex');
+    $routes->get('api/workflows/runtime/(:num)', '\Modules\Workflow\Controllers\RuntimeInspectorController::apiShow/$1');
+    $routes->get('api/workflows/runtime/(:num)/timeline', '\Modules\Workflow\Controllers\RuntimeInspectorController::timeline/$1');
 
-    $routes->post(
-        'workflows/simulator/start',
-        '\Modules\Workflow\Controllers\WorkflowSimulatorController::start'
-    );
+    $routes->get('workflows/simulator', '\Modules\Workflow\Controllers\WorkflowSimulatorController::index');
+    $routes->post('workflows/simulator/start', '\Modules\Workflow\Controllers\WorkflowSimulatorController::start');
+    $routes->get('workflows/simulator/(:num)', '\Modules\Workflow\Controllers\WorkflowSimulatorController::show/$1');
+    $routes->post('workflows/simulator/(:num)/interact', '\Modules\Workflow\Controllers\WorkflowSimulatorController::interact/$1');
+    $routes->post('workflows/simulator/(:num)/restart', '\Modules\Workflow\Controllers\WorkflowSimulatorController::restart/$1');
 
-    $routes->get(
-        'workflows/simulator/(:num)',
-        '\Modules\Workflow\Controllers\WorkflowSimulatorController::show/$1'
-    );
+    $routes->get('workflows', '\Modules\Workflow\Controllers\WorkflowController::index');
+    $routes->get('workflows/create', '\Modules\Workflow\Controllers\WorkflowController::create');
+    $routes->post('workflows', '\Modules\Workflow\Controllers\WorkflowController::store');
+    $routes->get('workflows/(:num)', '\Modules\Workflow\Controllers\WorkflowController::show/$1');
+    $routes->post('workflows/(:num)/versions', '\Modules\Workflow\Controllers\WorkflowController::createVersion/$1');
+    $routes->post('workflows/(:num)/versions/(:num)/clone', '\Modules\Workflow\Controllers\WorkflowController::cloneVersion/$1/$2');
+    $routes->post('workflows/(:num)/versions/(:num)/publish', '\Modules\Workflow\Controllers\WorkflowController::publish/$1/$2');
+    $routes->post('workflows/(:num)/archive', '\Modules\Workflow\Controllers\WorkflowController::archive/$1');
 
-    $routes->post(
-        'workflows/simulator/(:num)/interact',
-        '\Modules\Workflow\Controllers\WorkflowSimulatorController::interact/$1'
-    );
+    $routes->get('workflows/(:num)/versions/(:num)', '\Modules\Workflow\Controllers\WorkflowVersionController::show/$1/$2');
+    $routes->get('workflows/(:num)/versions/(:num)/nodes/create', '\Modules\Workflow\Controllers\WorkflowNodeController::create/$1/$2');
+    $routes->post('workflows/(:num)/versions/(:num)/nodes', '\Modules\Workflow\Controllers\WorkflowNodeController::store/$1/$2');
+    $routes->get('workflows/(:num)/versions/(:num)/nodes/(:num)/edit', '\Modules\Workflow\Controllers\WorkflowNodeController::edit/$1/$2/$3');
+    $routes->post('workflows/(:num)/versions/(:num)/nodes/(:num)', '\Modules\Workflow\Controllers\WorkflowNodeController::update/$1/$2/$3');
+    $routes->post('workflows/(:num)/versions/(:num)/nodes/(:num)/delete', '\Modules\Workflow\Controllers\WorkflowNodeController::delete/$1/$2/$3');
 
-    $routes->post(
-        'workflows/simulator/(:num)/restart',
-        '\Modules\Workflow\Controllers\WorkflowSimulatorController::restart/$1'
-    );
-    $routes->get(
-        'workflows',
-        '\Modules\Workflow\Controllers\WorkflowController::index'
-    );
-
-    $routes->get(
-        'workflows/create',
-        '\Modules\Workflow\Controllers\WorkflowController::create'
-    );
-
-    $routes->post(
-        'workflows',
-        '\Modules\Workflow\Controllers\WorkflowController::store'
-    );
-
-    $routes->get(
-        'workflows/(:num)',
-        '\Modules\Workflow\Controllers\WorkflowController::show/$1'
-    );
-
-    $routes->post(
-        'workflows/(:num)/versions',
-        '\Modules\Workflow\Controllers\WorkflowController::createVersion/$1'
-    );
-
-    $routes->post(
-        'workflows/(:num)/versions/(:num)/clone',
-        '\Modules\Workflow\Controllers\WorkflowController::cloneVersion/$1/$2'
-    );
-
-    $routes->post(
-        'workflows/(:num)/versions/(:num)/publish',
-        '\Modules\Workflow\Controllers\WorkflowController::publish/$1/$2'
-    );
-
-    $routes->post(
-        'workflows/(:num)/archive',
-        '\Modules\Workflow\Controllers\WorkflowController::archive/$1'
-    );
-
-    $routes->get(
-        'workflows/(:num)/versions/(:num)',
-        '\Modules\Workflow\Controllers\WorkflowVersionController::show/$1/$2'
-    );
-    $routes->get(
-        'workflows/(:num)/versions/(:num)/nodes/create',
-        '\Modules\Workflow\Controllers\WorkflowNodeController::create/$1/$2'
-    );
-
-    $routes->post(
-        'workflows/(:num)/versions/(:num)/nodes',
-        '\Modules\Workflow\Controllers\WorkflowNodeController::store/$1/$2'
-    );
-
-    $routes->get(
-        'workflows/(:num)/versions/(:num)/nodes/(:num)/edit',
-        '\Modules\Workflow\Controllers\WorkflowNodeController::edit/$1/$2/$3'
-    );
-
-    $routes->post(
-        'workflows/(:num)/versions/(:num)/nodes/(:num)',
-        '\Modules\Workflow\Controllers\WorkflowNodeController::update/$1/$2/$3'
-    );
-
-    $routes->post(
-        'workflows/(:num)/versions/(:num)/nodes/(:num)/delete',
-        '\Modules\Workflow\Controllers\WorkflowNodeController::delete/$1/$2/$3'
-    );
-
-    $routes->get(
-        'workflows/(:num)/versions/(:num)/transitions/create',
-        '\Modules\Workflow\Controllers\WorkflowTransitionController::create/$1/$2'
-    );
-
-    $routes->post(
-        'workflows/(:num)/versions/(:num)/transitions',
-        '\Modules\Workflow\Controllers\WorkflowTransitionController::store/$1/$2'
-    );
-
-    $routes->get(
-        'workflows/(:num)/versions/(:num)/transitions/(:num)/edit',
-        '\Modules\Workflow\Controllers\WorkflowTransitionController::edit/$1/$2/$3'
-    );
-
-    $routes->post(
-        'workflows/(:num)/versions/(:num)/transitions/(:num)',
-        '\Modules\Workflow\Controllers\WorkflowTransitionController::update/$1/$2/$3'
-    );
-
-    $routes->post(
-        'workflows/(:num)/versions/(:num)/transitions/(:num)/delete',
-        '\Modules\Workflow\Controllers\WorkflowTransitionController::delete/$1/$2/$3'
-    );
-
-    $routes->get(
-        'workflows/(:num)/versions/(:num)/validate',
-        '\Modules\Workflow\Controllers\WorkflowVersionController::validateVersion/$1/$2'
-    );
+    $routes->get('workflows/(:num)/versions/(:num)/transitions/create', '\Modules\Workflow\Controllers\WorkflowTransitionController::create/$1/$2');
+    $routes->post('workflows/(:num)/versions/(:num)/transitions', '\Modules\Workflow\Controllers\WorkflowTransitionController::store/$1/$2');
+    $routes->get('workflows/(:num)/versions/(:num)/transitions/(:num)/edit', '\Modules\Workflow\Controllers\WorkflowTransitionController::edit/$1/$2/$3');
+    $routes->post('workflows/(:num)/versions/(:num)/transitions/(:num)', '\Modules\Workflow\Controllers\WorkflowTransitionController::update/$1/$2/$3');
+    $routes->post('workflows/(:num)/versions/(:num)/transitions/(:num)/delete', '\Modules\Workflow\Controllers\WorkflowTransitionController::delete/$1/$2/$3');
+    $routes->get('workflows/(:num)/versions/(:num)/validate', '\Modules\Workflow\Controllers\WorkflowVersionController::validateVersion/$1/$2');
 });
 
 $routes->get('webhooks/messenger', '\Modules\Messenger\Controllers\WebhookController::verify');
@@ -167,7 +79,3 @@ $routes->post('webhooks/messenger', '\Modules\Messenger\Controllers\WebhookContr
 
 $routes->get('system/migrate', 'SystemController::migrate');
 $routes->get('system/seed/(:segment)', 'SystemController::seed/$1');
-
-
-
-
