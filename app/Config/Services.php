@@ -7,6 +7,9 @@ use Modules\Core\Event\Models\SystemEventModel;
 use Modules\Core\Event\Services\EventDispatcher;
 use Modules\Core\Event\Services\EventEngine;
 use Modules\Core\Event\Services\EventRegistry;
+use Modules\Operations\Application\CitizenOperationsService;
+use Modules\Operations\Infrastructure\Publishers\WorkItemEventPublisher;
+use Modules\Operations\Infrastructure\Repositories\DatabaseWorkItemRepository;
 use Modules\Workflow\Repositories\WorkflowRepository;
 use Modules\Workflow\Services\InstrumentedWorkflowRuntimeService;
 use Modules\Workflow\Services\RuntimeInspectorQueryService;
@@ -78,5 +81,35 @@ class Services extends BaseService
         }
 
         return new RuntimeInspectorQueryService(db_connect());
+    }
+
+    public static function workItemRepository(bool $getShared = true): DatabaseWorkItemRepository
+    {
+        if ($getShared) {
+            return static::getSharedInstance('workItemRepository');
+        }
+
+        return new DatabaseWorkItemRepository(db_connect());
+    }
+
+    public static function workItemEventPublisher(bool $getShared = true): WorkItemEventPublisher
+    {
+        if ($getShared) {
+            return static::getSharedInstance('workItemEventPublisher');
+        }
+
+        return new WorkItemEventPublisher();
+    }
+
+    public static function citizenOperations(bool $getShared = true): CitizenOperationsService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('citizenOperations');
+        }
+
+        return new CitizenOperationsService(
+            static::workItemRepository(),
+            static::workItemEventPublisher(),
+        );
     }
 }
