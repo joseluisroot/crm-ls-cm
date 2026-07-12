@@ -69,6 +69,55 @@ final class CitizenOperationsService
         return $this->repository->find($workItemId) ?? [];
     }
 
+    public function changeStatus(int $workItemId, string $status): array
+    {
+        $status = (new WorkItemStatus(strtoupper($status)))->value();
+        $changes = ['status' => $status];
+        $now = date('Y-m-d H:i:s');
+
+        if ($status === WorkItemStatus::IN_PROGRESS) {
+            $changes['opened_at'] = $now;
+        } elseif ($status === WorkItemStatus::RESOLVED) {
+            $changes['resolved_at'] = $now;
+        } elseif ($status === WorkItemStatus::CLOSED) {
+            $changes['closed_at'] = $now;
+        }
+
+        $this->repository->updateState($workItemId, $changes);
+        $this->publisher->changed($workItemId, 'status_changed', [
+            'work_item_id' => $workItemId,
+            'status' => $status,
+        ]);
+
+        return $this->repository->find($workItemId) ?? [];
+    }
+
+    public function changePriority(int $workItemId, string $priority): array
+    {
+        $priority = (new WorkItemPriority(strtoupper($priority)))->value();
+        $this->repository->updateState($workItemId, ['priority' => $priority]);
+        $this->publisher->changed($workItemId, 'priority_changed', [
+            'work_item_id' => $workItemId,
+            'priority' => $priority,
+        ]);
+
+        return $this->repository->find($workItemId) ?? [];
+    }
+
+    public function markResponded(int $workItemId): array
+    {
+        $this->repository->updateState($workItemId, [
+            'first_response_at' => date('Y-m-d H:i:s'),
+            'status' => WorkItemStatus::WAITING_CITIZEN,
+        ]);
+        $this->publisher->changed($workItemId, 'responded', [
+            'work_item_id' => $workItemId,
+            'status' => WorkItemStatus::WAITING_CITIZEN,
+        ]);
+
+        return $this->repository->find($workItemId) ?? [];
+    }
+
     public function linkCase(int $workItemId, int $caseId): array
     {
         $this->repository->updateState($workItemId, [
