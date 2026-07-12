@@ -40,11 +40,21 @@ Objetivo de negocio: convertir interacciones relevantes en trabajo operativo org
 - layout reorganizado por capacidades de producto;
 - navegación visible a Operations, Engagement, Citizen Participation y Runtime Inspector.
 
+### Operations Console
+- detalle operacional por Work Item;
+- asignación de responsable;
+- cambio controlado de estado y prioridad;
+- registro de primera respuesta;
+- timestamps de apertura, resolución y cierre;
+- timeline auditable desde `system_events`;
+- relación visible con ciudadano y caso cuando existe;
+- acceso desde la Unified Operations Queue.
+
 ### Próximo incremento
 - creación automática del Work Item durante la ingestión;
-- asignación y cambios de estado desde la cola;
-- respuesta a comentarios;
+- SLA y alertas de vencimiento;
+- respuesta real a comentarios;
+- vinculación de identidad social;
 - conversión a caso;
-- SLA;
 - Citizen Card;
 - timeline ciudadano.
