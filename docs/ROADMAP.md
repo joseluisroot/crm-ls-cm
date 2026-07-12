@@ -30,15 +30,18 @@
 - primera Unified Operations Queue
 - filtros por estado y prioridad
 - navegación integrada en CIAC Studio
-- accesos visibles a Engagement, Participation y Runtime Inspector
+- Operations Console por Work Item
+- asignación de operador
+- cambio de estado y prioridad
+- registro de primera respuesta
+- timeline operativo basado en Core Event Engine
 
 ### Siguientes incrementos
 - creación automática de Work Items durante la ingestión del webhook
-- acciones operativas sobre Work Items
-- estados operativos y SLA
+- SLA calculado y alertas de vencimiento
 - Citizen Card
-- responder y atender comentarios
-- asignación y prioridad
+- respuesta real a comentarios desde CIAC
+- vinculación de identidad social con Citizen
 - conversión de interacción a caso
 - timeline ciudadano unificado
 
