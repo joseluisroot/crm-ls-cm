@@ -18,7 +18,7 @@
 
 ## v1.1 Citizen Operations — en progreso
 
-### Completado en la base del dominio
+### Completado
 - RFC-001 Citizen Operations Domain
 - ADR-005 Unified Work Queue
 - modelo de Work Items omnicanal
@@ -26,10 +26,15 @@
 - creación idempotente por origen
 - eventos `operations.work_item.*`
 - repositorio y servicio de aplicación
+- adaptador Facebook Comment → Work Item
+- primera Unified Operations Queue
+- filtros por estado y prioridad
+- navegación integrada en CIAC Studio
+- accesos visibles a Engagement, Participation y Runtime Inspector
 
 ### Siguientes incrementos
-- conversión controlada de comentarios a Work Items
-- Operations Queue
+- creación automática de Work Items durante la ingestión del webhook
+- acciones operativas sobre Work Items
 - estados operativos y SLA
 - Citizen Card
 - responder y atender comentarios
