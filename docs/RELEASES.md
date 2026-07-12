@@ -30,11 +30,21 @@ Objetivo de negocio: convertir interacciones relevantes en trabajo operativo org
 - eventos `operations.work_item.created`, `assigned` y `case_created`;
 - pruebas unitarias iniciales.
 
+### Unified Operations Queue
+- adaptador idempotente para comentarios de Facebook;
+- sincronización manual de comentarios pendientes;
+- primera cola visual de Work Items;
+- filtros por estado y prioridad;
+- contexto de comentario y publicación;
+- acceso a permalink cuando Meta lo proporciona;
+- layout reorganizado por capacidades de producto;
+- navegación visible a Operations, Engagement, Citizen Participation y Runtime Inspector.
+
 ### Próximo incremento
-- importar comentarios pendientes como Work Items;
-- Operations Queue;
-- estados, prioridad, asignación y SLA;
-- acciones sobre comentarios;
+- creación automática del Work Item durante la ingestión;
+- asignación y cambios de estado desde la cola;
+- respuesta a comentarios;
 - conversión a caso;
+- SLA;
 - Citizen Card;
 - timeline ciudadano.
