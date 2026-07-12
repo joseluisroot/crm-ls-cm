@@ -8,6 +8,8 @@ use Modules\Core\Event\Services\EventDispatcher;
 use Modules\Core\Event\Services\EventEngine;
 use Modules\Core\Event\Services\EventRegistry;
 use Modules\Operations\Application\CitizenOperationsService;
+use Modules\Operations\Application\FacebookCommentWorkItemAdapter;
+use Modules\Operations\Application\OperationsQueueQueryService;
 use Modules\Operations\Infrastructure\Publishers\WorkItemEventPublisher;
 use Modules\Operations\Infrastructure\Repositories\DatabaseWorkItemRepository;
 use Modules\Workflow\Repositories\WorkflowRepository;
@@ -111,5 +113,23 @@ class Services extends BaseService
             static::workItemRepository(),
             static::workItemEventPublisher(),
         );
+    }
+
+    public static function facebookCommentWorkItemAdapter(bool $getShared = true): FacebookCommentWorkItemAdapter
+    {
+        if ($getShared) {
+            return static::getSharedInstance('facebookCommentWorkItemAdapter');
+        }
+
+        return new FacebookCommentWorkItemAdapter(static::citizenOperations(), db_connect());
+    }
+
+    public static function operationsQueueQuery(bool $getShared = true): OperationsQueueQueryService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('operationsQueueQuery');
+        }
+
+        return new OperationsQueueQueryService(db_connect());
     }
 }
