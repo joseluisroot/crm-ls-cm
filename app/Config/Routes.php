@@ -15,6 +15,11 @@ $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
 
     $routes->get('operations', '\Modules\Operations\Controllers\OperationsController::index');
     $routes->post('operations/import-facebook-comments', '\Modules\Operations\Controllers\OperationsController::importPending');
+    $routes->get('operations/(:num)', '\Modules\Operations\Controllers\OperationsController::show/$1');
+    $routes->post('operations/(:num)/assign', '\Modules\Operations\Controllers\OperationsController::assign/$1');
+    $routes->post('operations/(:num)/status', '\Modules\Operations\Controllers\OperationsController::changeStatus/$1');
+    $routes->post('operations/(:num)/priority', '\Modules\Operations\Controllers\OperationsController::changePriority/$1');
+    $routes->post('operations/(:num)/responded', '\Modules\Operations\Controllers\OperationsController::markResponded/$1');
 
     $routes->get('citizens', '\Modules\Citizens\Controllers\CitizensController::index');
     $routes->get('citizens/(:num)', '\Modules\Citizens\Controllers\CitizensController::show/$1');
@@ -32,13 +37,10 @@ $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
     $routes->get('my-cases', '\Modules\Cases\Controllers\CasesController::myCases');
 
     $routes->get('messenger/events', '\Modules\Messenger\Controllers\MessengerEventsController::index');
-
     $routes->get('notifications', '\Modules\Notification\Controllers\NotificationsController::index');
     $routes->post('notifications/(:num)/read', '\Modules\Notification\Controllers\NotificationsController::markAsRead/$1');
-
     $routes->get('analytics', '\Modules\Analytics\Controllers\AnalyticsController::index');
     $routes->get('analytics/data', '\Modules\Analytics\Controllers\AnalyticsController::data');
-
     $routes->get('engagement', '\Modules\Engagement\Controllers\EngagementCenterController::index');
     $routes->get('engagement/participants', '\Modules\Engagement\Controllers\EngagementCenterController::participants');
 
@@ -62,14 +64,12 @@ $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
     $routes->post('workflows/(:num)/versions/(:num)/clone', '\Modules\Workflow\Controllers\WorkflowController::cloneVersion/$1/$2');
     $routes->post('workflows/(:num)/versions/(:num)/publish', '\Modules\Workflow\Controllers\WorkflowController::publish/$1/$2');
     $routes->post('workflows/(:num)/archive', '\Modules\Workflow\Controllers\WorkflowController::archive/$1');
-
     $routes->get('workflows/(:num)/versions/(:num)', '\Modules\Workflow\Controllers\WorkflowVersionController::show/$1/$2');
     $routes->get('workflows/(:num)/versions/(:num)/nodes/create', '\Modules\Workflow\Controllers\WorkflowNodeController::create/$1/$2');
     $routes->post('workflows/(:num)/versions/(:num)/nodes', '\Modules\Workflow\Controllers\WorkflowNodeController::store/$1/$2');
     $routes->get('workflows/(:num)/versions/(:num)/nodes/(:num)/edit', '\Modules\Workflow\Controllers\WorkflowNodeController::edit/$1/$2/$3');
     $routes->post('workflows/(:num)/versions/(:num)/nodes/(:num)', '\Modules\Workflow\Controllers\WorkflowNodeController::update/$1/$2/$3');
     $routes->post('workflows/(:num)/versions/(:num)/nodes/(:num)/delete', '\Modules\Workflow\Controllers\WorkflowNodeController::delete/$1/$2/$3');
-
     $routes->get('workflows/(:num)/versions/(:num)/transitions/create', '\Modules\Workflow\Controllers\WorkflowTransitionController::create/$1/$2');
     $routes->post('workflows/(:num)/versions/(:num)/transitions', '\Modules\Workflow\Controllers\WorkflowTransitionController::store/$1/$2');
     $routes->get('workflows/(:num)/versions/(:num)/transitions/(:num)/edit', '\Modules\Workflow\Controllers\WorkflowTransitionController::edit/$1/$2/$3');
@@ -80,6 +80,5 @@ $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
 
 $routes->get('webhooks/messenger', '\Modules\Messenger\Controllers\WebhookController::verify');
 $routes->post('webhooks/messenger', '\Modules\Messenger\Controllers\WebhookController::receive');
-
 $routes->get('system/migrate', 'SystemController::migrate');
 $routes->get('system/seed/(:segment)', 'SystemController::seed/$1');
