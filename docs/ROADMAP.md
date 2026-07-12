@@ -14,17 +14,36 @@
 - Workflow Runtime Inspector
 - Public Engagement Engine
 - Engagement Center
+- Documentation Center
 
-## v1.1 Citizen Operations — siguiente
+## v1.1 Citizen Operations — en progreso
 
-- Unified Work Queue
-- Work Items
+### Completado en la base del dominio
+- RFC-001 Citizen Operations Domain
+- ADR-005 Unified Work Queue
+- modelo de Work Items omnicanal
+- catálogos de estado, prioridad, canal y tipo de origen
+- creación idempotente por origen
+- eventos `operations.work_item.*`
+- repositorio y servicio de aplicación
+
+### Siguientes incrementos
+- conversión controlada de comentarios a Work Items
+- Operations Queue
 - estados operativos y SLA
 - Citizen Card
 - responder y atender comentarios
 - asignación y prioridad
 - conversión de interacción a caso
 - timeline ciudadano unificado
+
+## v1.1.x Content & Identity Enrichment
+
+- Publication y contexto de publicación
+- Conversation Threads
+- clasificación de actores: Citizen, Institution, System y AI
+- comportamiento de comentarios ocultos en Meta
+- enlace y sincronización de contenido
 
 ## v1.2 Citizen 360
 
