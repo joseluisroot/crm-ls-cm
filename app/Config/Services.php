@@ -1,7 +1,6 @@
 <?php
 
 namespace Config;
-
 use CodeIgniter\Config\BaseService;
 use Modules\Core\Event\Models\SystemEventModel;
 use Modules\Core\Event\Services\EventDispatcher;
@@ -9,6 +8,7 @@ use Modules\Core\Event\Services\EventEngine;
 use Modules\Core\Event\Services\EventRegistry;
 use Modules\Operations\Application\CitizenOperationsService;
 use Modules\Operations\Application\FacebookCommentWorkItemAdapter;
+use Modules\Operations\Application\OperationsDetailQueryService;
 use Modules\Operations\Application\OperationsQueueQueryService;
 use Modules\Operations\Infrastructure\Publishers\WorkItemEventPublisher;
 use Modules\Operations\Infrastructure\Repositories\DatabaseWorkItemRepository;
@@ -23,113 +23,75 @@ class Services extends BaseService
 {
     public static function eventRegistry(bool $getShared = true): EventRegistry
     {
-        if ($getShared) {
-            return static::getSharedInstance('eventRegistry');
-        }
-
+        if ($getShared) return static::getSharedInstance('eventRegistry');
         $registry = new EventRegistry();
         $registry->subscribe(new RuntimeInspectorSubscriber());
-
         return $registry;
     }
 
     public static function eventDispatcher(bool $getShared = true): EventDispatcher
     {
-        if ($getShared) {
-            return static::getSharedInstance('eventDispatcher');
-        }
-
+        if ($getShared) return static::getSharedInstance('eventDispatcher');
         return new EventDispatcher(static::eventRegistry());
     }
 
     public static function eventEngine(bool $getShared = true): EventEngine
     {
-        if ($getShared) {
-            return static::getSharedInstance('eventEngine');
-        }
-
-        return new EventEngine(
-            static::eventDispatcher(),
-            new SystemEventModel(),
-        );
+        if ($getShared) return static::getSharedInstance('eventEngine');
+        return new EventEngine(static::eventDispatcher(), new SystemEventModel());
     }
 
     public static function workflowRuntimeEventPublisher(bool $getShared = true): WorkflowRuntimeEventPublisher
     {
-        if ($getShared) {
-            return static::getSharedInstance('workflowRuntimeEventPublisher');
-        }
-
+        if ($getShared) return static::getSharedInstance('workflowRuntimeEventPublisher');
         return new WorkflowRuntimeEventPublisher(static::eventEngine());
     }
 
     public static function instrumentedWorkflowRuntime(bool $getShared = true): InstrumentedWorkflowRuntimeService
     {
-        if ($getShared) {
-            return static::getSharedInstance('instrumentedWorkflowRuntime');
-        }
-
-        return new InstrumentedWorkflowRuntimeService(
-            new WorkflowRuntimeService(),
-            new WorkflowRepository(),
-            static::workflowRuntimeEventPublisher(),
-        );
+        if ($getShared) return static::getSharedInstance('instrumentedWorkflowRuntime');
+        return new InstrumentedWorkflowRuntimeService(new WorkflowRuntimeService(), new WorkflowRepository(), static::workflowRuntimeEventPublisher());
     }
 
     public static function runtimeInspectorQuery(bool $getShared = true): RuntimeInspectorQueryService
     {
-        if ($getShared) {
-            return static::getSharedInstance('runtimeInspectorQuery');
-        }
-
+        if ($getShared) return static::getSharedInstance('runtimeInspectorQuery');
         return new RuntimeInspectorQueryService(db_connect());
     }
 
     public static function workItemRepository(bool $getShared = true): DatabaseWorkItemRepository
     {
-        if ($getShared) {
-            return static::getSharedInstance('workItemRepository');
-        }
-
+        if ($getShared) return static::getSharedInstance('workItemRepository');
         return new DatabaseWorkItemRepository(db_connect());
     }
 
     public static function workItemEventPublisher(bool $getShared = true): WorkItemEventPublisher
     {
-        if ($getShared) {
-            return static::getSharedInstance('workItemEventPublisher');
-        }
-
+        if ($getShared) return static::getSharedInstance('workItemEventPublisher');
         return new WorkItemEventPublisher();
     }
 
     public static function citizenOperations(bool $getShared = true): CitizenOperationsService
     {
-        if ($getShared) {
-            return static::getSharedInstance('citizenOperations');
-        }
-
-        return new CitizenOperationsService(
-            static::workItemRepository(),
-            static::workItemEventPublisher(),
-        );
+        if ($getShared) return static::getSharedInstance('citizenOperations');
+        return new CitizenOperationsService(static::workItemRepository(), static::workItemEventPublisher());
     }
 
     public static function facebookCommentWorkItemAdapter(bool $getShared = true): FacebookCommentWorkItemAdapter
     {
-        if ($getShared) {
-            return static::getSharedInstance('facebookCommentWorkItemAdapter');
-        }
-
+        if ($getShared) return static::getSharedInstance('facebookCommentWorkItemAdapter');
         return new FacebookCommentWorkItemAdapter(static::citizenOperations(), db_connect());
     }
 
     public static function operationsQueueQuery(bool $getShared = true): OperationsQueueQueryService
     {
-        if ($getShared) {
-            return static::getSharedInstance('operationsQueueQuery');
-        }
-
+        if ($getShared) return static::getSharedInstance('operationsQueueQuery');
         return new OperationsQueueQueryService(db_connect());
+    }
+
+    public static function operationsDetailQuery(bool $getShared = true): OperationsDetailQueryService
+    {
+        if ($getShared) return static::getSharedInstance('operationsDetailQuery');
+        return new OperationsDetailQueryService(db_connect());
     }
 }
