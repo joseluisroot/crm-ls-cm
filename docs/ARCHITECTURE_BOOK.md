@@ -59,7 +59,8 @@ Runtime Inspector / Analytics / Citizen Timeline
 - los módulos se comunican mediante eventos cuando sea apropiado;
 - no se duplican motores de casos, asignaciones, notificaciones o workflows;
 - toda operación relevante debe ser auditable;
-- las nuevas capacidades deben integrarse con la arquitectura existente.
+- las nuevas capacidades deben integrarse con la arquitectura existente;
+- se captura primero el dato externo y se enriquece después sin destruir el payload original.
 
 ## 4. Flujo actual de engagement
 
@@ -72,6 +73,35 @@ Facebook Page
   → Engagement Center / Analytics
 ```
 
-## 5. Próxima evolución
+## 5. Citizen Operations Domain
 
-Citizen Operations introducirá Work Items como unidad operativa omnicanal. Un Work Item referenciará su origen mediante tipo e identificador, sin acoplarse exclusivamente a comentarios de Facebook.
+Citizen Operations introduce el **Work Item** como unidad operativa agnóstica al canal.
+
+```text
+External interaction
+  → origin_type + origin_id
+  → Work Item
+  → Assignment / Case / Workflow
+  → operations.work_item.*
+  → Runtime / Timeline / Analytics
+```
+
+### Límites
+- Operations no conoce la API de Facebook ni payloads específicos del canal.
+- El módulo de captura conserva el evento original.
+- El Work Item conserva únicamente referencias, estado operativo y metadata necesaria.
+- Case Lifecycle, Assignment y Workflow continúan siendo las fuentes de verdad de sus respectivos procesos.
+
+### Componentes iniciales
+- entidad `WorkItem`;
+- Value Objects de estado y prioridad;
+- `WorkItemRepositoryInterface`;
+- `DatabaseWorkItemRepository`;
+- `CitizenOperationsService`;
+- `WorkItemEventPublisher`;
+- catálogos extensibles;
+- restricción de idempotencia por tipo e identificador de origen.
+
+## 6. Flujo documental
+
+Las decisiones de dominio relevantes requieren RFC y ADR. El código, roadmap, Architecture Book y notas de release deben evolucionar en el mismo Pull Request.
