@@ -41,6 +41,12 @@ final class OperationsController extends BaseController
             $citizenCard = service('citizenCard')->get((int) $item['citizen_id']);
         }
 
+        $authorName = $item['source']['author_name'] ?? $item['title'] ?? null;
+        $quickActions = array_map(
+            static fn (array $action): array => service('quickActions')->personalize($action, $authorName),
+            service('quickActions')->all(),
+        );
+
         return view('Modules\Operations\Views\show', [
             'title' => 'Work Item #' . $id,
             'item' => $item,
@@ -49,6 +55,8 @@ final class OperationsController extends BaseController
             'users' => $query->users(),
             'statuses' => $query->statuses(),
             'priorities' => $query->priorities(),
+            'responseDraft' => service('responseDrafts')->findForWorkItem($id),
+            'quickActions' => $quickActions,
         ]);
     }
 
