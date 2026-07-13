@@ -61,9 +61,17 @@
 - actualización idempotente de Work Items importados previamente
 - evento `operations.work_item.citizen_linked`
 
+### Citizen Timeline Foundation
+- DTOs estables para Timeline
+- repositorio agregador sobre Work Items y Core Event Engine
+- métricas de Work Items, casos e identidades
+- servicio `CitizenTimelineQueryService`
+- Timeline cronológico en `/admin/citizens/{id}`
+- perfil ciudadano renovado con identidades y relaciones actuales
+
 ### Siguientes incrementos
-- Citizen Timeline
-- Citizen Card
+- incorporar comentarios, Messenger y reacciones al Timeline
+- Citizen Card reutilizable desde Operations
 - Citizen 360
 
 ## v1.2.x Content & Identity Enrichment
