@@ -23,6 +23,7 @@ use Modules\Publication\Application\CommentThreadService;
 use Modules\Publication\Application\PublicationAnalyticsService;
 use Modules\Publication\Application\PublicationCitizenIdentityService;
 use Modules\Publication\Application\PublicationProfileQueryService;
+use Modules\Publication\Application\ResolvePublicationParticipantsService;
 use Modules\Workflow\Repositories\WorkflowRepository;
 use Modules\Workflow\Services\InstrumentedWorkflowRuntimeService;
 use Modules\Workflow\Services\RuntimeInspectorQueryService;
@@ -170,5 +171,11 @@ class Services extends BaseService
     {
         if ($getShared) return static::getSharedInstance('publicationCitizenIdentity');
         return new PublicationCitizenIdentityService(db_connect());
+    }
+
+    public static function resolvePublicationParticipants(bool $getShared = true): ResolvePublicationParticipantsService
+    {
+        if ($getShared) return static::getSharedInstance('resolvePublicationParticipants');
+        return new ResolvePublicationParticipantsService(static::citizenResolver());
     }
 }
