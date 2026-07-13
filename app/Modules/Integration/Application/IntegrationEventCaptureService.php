@@ -23,6 +23,8 @@ final class IntegrationEventCaptureService
         ?string $requestIp = null,
         ?string $signature = null,
         int $eventVersion = 1,
+        ?int $originalEventId = null,
+        int $replayAttempt = 0,
     ): array {
         $uuid = $this->uuidV4();
         $correlationId = $this->uuidV4();
@@ -42,6 +44,8 @@ final class IntegrationEventCaptureService
             requestIp: $requestIp,
             signature: $signature,
             receivedAt: $receivedAt,
+            originalEventId: $originalEventId,
+            replayAttempt: $replayAttempt,
         );
 
         return [
@@ -49,6 +53,8 @@ final class IntegrationEventCaptureService
             'uuid' => $uuid,
             'correlation_id' => $correlationId,
             'received_at' => $receivedAt,
+            'original_event_id' => $originalEventId,
+            'replay_attempt' => $replayAttempt,
         ];
     }
 

@@ -28,6 +28,8 @@ final class IntegrationEvent
         public readonly ?string $requestIp,
         public readonly ?string $signature,
         public readonly string $receivedAt,
+        public readonly ?int $originalEventId = null,
+        public readonly int $replayAttempt = 0,
     ) {
         if ($this->source === '' || $this->eventType === '') {
             throw new InvalidArgumentException('Integration event source and type are required.');
@@ -35,6 +37,10 @@ final class IntegrationEvent
 
         if ($this->eventVersion < 1) {
             throw new InvalidArgumentException('Integration event version must be greater than zero.');
+        }
+
+        if ($this->replayAttempt < 0) {
+            throw new InvalidArgumentException('Replay attempt cannot be negative.');
         }
 
         if (! in_array($this->status, self::statuses(), true)) {
