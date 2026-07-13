@@ -75,8 +75,7 @@ final class PublicationCitizenIdentityService
 
         $rows = $this->connection()
             ->table('citizen_social_identities i')
-            ->select('i.external_id, i.citizen_id, i.display_name, i.actor_type, i.confidence')
-            ->select("CONCAT_WS(' ', c.first_name, c.last_name) AS citizen_name", false)
+            ->select('i.external_id, i.citizen_id, i.display_name, i.actor_type, i.confidence, c.name AS citizen_name')
             ->join('citizens c', 'c.id = i.citizen_id', 'left')
             ->where('i.channel', IdentityChannel::FACEBOOK)
             ->where('i.is_active', 1)
