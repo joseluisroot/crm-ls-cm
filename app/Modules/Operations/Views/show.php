@@ -60,6 +60,16 @@
     </div>
 
     <aside class="space-y-6">
+        <?php if ($citizenCard): ?>
+            <?= view('Modules\Citizen\Presentation\Views\components\citizen_card', ['citizenCard' => $citizenCard]) ?>
+        <?php else: ?>
+            <section class="bg-white border border-dashed border-slate-300 rounded-2xl p-6">
+                <p class="text-xs uppercase tracking-widest text-slate-400 font-bold">Contexto ciudadano</p>
+                <h2 class="text-lg font-black text-slate-800 mt-2">Pendiente de vinculación</h2>
+                <p class="text-sm text-slate-500 mt-2">Sin Citizen asociado a este Work Item.</p>
+            </section>
+        <?php endif; ?>
+
         <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
             <h2 class="text-xl font-black text-slate-900">Acciones operativas</h2>
 
@@ -107,7 +117,7 @@
             <h2 class="text-xl font-black text-slate-900">Relaciones</h2>
             <dl class="mt-5 space-y-4 text-sm">
                 <div><dt class="text-slate-400">Operador</dt><dd class="font-bold text-slate-800 mt-1"><?= esc($item['assigned_user_name'] ?? 'Sin asignar') ?></dd></div>
-                <div><dt class="text-slate-400">Ciudadano</dt><dd class="font-bold text-slate-800 mt-1"><?= $item['citizen_id'] ? '#' . esc($item['citizen_id']) : 'Pendiente de vinculación' ?></dd></div>
+                <div><dt class="text-slate-400">Ciudadano</dt><dd class="font-bold text-slate-800 mt-1"><?php if ($item['citizen_id']): ?><a class="text-pink-600" href="<?= site_url('admin/citizens/' . $item['citizen_id']) ?>">#<?= esc($item['citizen_id']) ?></a><?php else: ?>Pendiente de vinculación<?php endif; ?></dd></div>
                 <div><dt class="text-slate-400">Caso</dt><dd class="font-bold text-slate-800 mt-1"><?php if ($item['case_id']): ?><a class="text-pink-600" href="<?= site_url('admin/cases/' . $item['case_id']) ?>"><?= esc($item['case_public_code'] ?: '#' . $item['case_id']) ?></a><?php else: ?>Sin caso relacionado<?php endif; ?></dd></div>
                 <div><dt class="text-slate-400">Creado</dt><dd class="font-bold text-slate-800 mt-1"><?= esc($item['created_at']) ?></dd></div>
             </dl>
