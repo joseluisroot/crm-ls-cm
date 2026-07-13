@@ -61,27 +61,14 @@ $navClass = static function (string $path, bool $prefix = false) use ($currentPa
 
             <div class="pt-4 mt-4 border-t border-slate-800">
                 <p class="px-4 mb-2 text-xs uppercase tracking-widest text-slate-500">Citizen Operations</p>
-
-                <a href="<?= site_url('admin/operations') ?>" class="<?= $navClass('admin/operations', true) ?>">
-                    📥 Unified Operations Queue
-                </a>
-
-                <a href="<?= site_url('admin/publications') ?>" class="<?= $navClass('admin/publications', true) ?>">
-                    📢 Publication Center
-                </a>
-
-                <a href="<?= site_url('admin/engagement') ?>" class="<?= $navClass('admin/engagement') ?>">
-                    🌍 Public Engagement
-                </a>
-
-                <a href="<?= site_url('admin/engagement/participants') ?>" class="<?= $navClass('admin/engagement/participants') ?>">
-                    👥 Citizen Participation
-                </a>
+                <a href="<?= site_url('admin/operations') ?>" class="<?= $navClass('admin/operations', true) ?>">📥 Unified Operations Queue</a>
+                <a href="<?= site_url('admin/publications') ?>" class="<?= $navClass('admin/publications', true) ?>">📢 Publication Center</a>
+                <a href="<?= site_url('admin/engagement') ?>" class="<?= $navClass('admin/engagement') ?>">🌍 Public Engagement</a>
+                <a href="<?= site_url('admin/engagement/participants') ?>" class="<?= $navClass('admin/engagement/participants') ?>">👥 Citizen Participation</a>
             </div>
 
             <div class="pt-4 mt-4 border-t border-slate-800">
                 <p class="px-4 mb-2 text-xs uppercase tracking-widest text-slate-500">Attention Management</p>
-
                 <a href="<?= site_url('admin/citizens') ?>" class="<?= $navClass('admin/citizens', true) ?>">👤 Citizen Center</a>
                 <a href="<?= site_url('admin/conversations') ?>" class="<?= $navClass('admin/conversations', true) ?>">💬 Conversation Center</a>
                 <a href="<?= site_url('admin/cases') ?>" class="<?= $navClass('admin/cases', true) ?>">📁 Case Management</a>
@@ -96,8 +83,12 @@ $navClass = static function (string $path, bool $prefix = false) use ($currentPa
             </div>
 
             <div class="pt-4 mt-4 border-t border-slate-800">
-                <p class="px-4 mb-2 text-xs uppercase tracking-widest text-slate-500">Process Automation</p>
+                <p class="px-4 mb-2 text-xs uppercase tracking-widest text-slate-500">Observability</p>
+                <a href="<?= site_url('admin/integration/events') ?>" class="<?= $navClass('admin/integration/events', true) ?>">🔁 Replay Center</a>
+            </div>
 
+            <div class="pt-4 mt-4 border-t border-slate-800">
+                <p class="px-4 mb-2 text-xs uppercase tracking-widest text-slate-500">Process Automation</p>
                 <a href="<?= site_url('admin/workflows') ?>" class="<?= $navClass('admin/workflows') ?>">⚙️ Workflow Designer</a>
                 <a href="<?= site_url('admin/workflows/simulator') ?>" class="<?= $navClass('admin/workflows/simulator', true) ?>">🧪 Workflow Simulator</a>
                 <a href="<?= site_url('admin/workflows/runtime') ?>" class="<?= $navClass('admin/workflows/runtime', true) ?>">▶ Runtime Inspector</a>
@@ -108,14 +99,10 @@ $navClass = static function (string $path, bool $prefix = false) use ($currentPa
             <div class="border-t border-slate-800 pt-6">
                 <p class="text-xs uppercase tracking-widest text-slate-500">Usuario activo</p>
                 <p class="font-semibold mt-1 mb-5"><?= esc(session()->get('admin_user_name') ?? 'Administrador') ?></p>
-
-                <a href="<?= site_url('admin/logout') ?>" class="block text-center px-4 py-3 rounded-xl bg-slate-800 hover:bg-red-600 transition font-semibold">
-                    Cerrar sesión
-                </a>
-
+                <a href="<?= site_url('admin/logout') ?>" class="block text-center px-4 py-3 rounded-xl bg-slate-800 hover:bg-red-600 transition font-semibold">Cerrar sesión</a>
                 <div class="mt-6 text-center">
                     <p class="text-xs text-slate-500">CIAC Platform</p>
-                    <p class="text-xs text-slate-600 mt-1">Version 1.2 Citizen & Publication</p>
+                    <p class="text-xs text-slate-600 mt-1">Version 1.3 Observability</p>
                 </div>
             </div>
         </div>
@@ -129,7 +116,6 @@ $navClass = static function (string $path, bool $prefix = false) use ($currentPa
                     <h2 class="text-4xl font-black text-slate-900 mt-2"><?= esc($title ?? '') ?></h2>
                     <p class="text-slate-500 mt-2">Centro Inteligente de Atención Ciudadana</p>
                 </div>
-
                 <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 shadow-sm">
                     <p class="text-xs uppercase tracking-widest text-slate-400">Plataforma</p>
                     <p class="font-bold text-slate-800 mt-1">Citizen Intelligence & Attention Center</p>
@@ -138,15 +124,10 @@ $navClass = static function (string $path, bool $prefix = false) use ($currentPa
         </header>
 
         <?php if (session()->getFlashdata('success')): ?>
-            <div class="mb-6 rounded-xl bg-green-100 border border-green-300 p-4 text-green-800">
-                <?= esc(session()->getFlashdata('success')) ?>
-            </div>
+            <div class="mb-6 rounded-xl bg-green-100 border border-green-300 p-4 text-green-800"><?= esc(session()->getFlashdata('success')) ?></div>
         <?php endif; ?>
-
         <?php if (session()->getFlashdata('error')): ?>
-            <div class="mb-6 rounded-xl bg-red-100 border border-red-300 p-4 text-red-700">
-                <?= esc(session()->getFlashdata('error')) ?>
-            </div>
+            <div class="mb-6 rounded-xl bg-red-100 border border-red-300 p-4 text-red-700"><?= esc(session()->getFlashdata('error')) ?></div>
         <?php endif; ?>
 
         <?= $this->renderSection('content') ?>
