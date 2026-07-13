@@ -25,53 +25,72 @@ class WebhookController extends BaseController
 
     public function receive()
     {
+        $startedAt = microtime(true);
         $payload = $this->request->getJSON(true);
 
-        if (!$payload) {
+        if (! $payload) {
             return $this->response->setStatusCode(400)->setJSON([
                 'status' => 'error',
                 'message' => 'Invalid JSON',
             ]);
         }
 
-        if (($payload['object'] ?? null) !== 'page') {
+        $capture = service('integrationEventCapture');
+        $envelope = $capture->capture(
+            source: 'FACEBOOK',
+            eventType: $this->detectEnvelopeType($payload),
+            payload: $payload,
+            headers: $this->normalizedHeaders(),
+            externalEventId: $this->externalEventId($payload),
+            endpoint: (string) $this->request->getUri(),
+            requestIp: $this->request->getIPAddress(),
+            signature: $this->request->getHeaderLine('X-Hub-Signature-256') ?: null,
+        );
+
+        $trace = [['step' => 'integration_event_received', 'at' => date(DATE_ATOM)]];
+
+        try {
+            if (($payload['object'] ?? null) !== 'page') {
+                $trace[] = ['step' => 'payload_ignored', 'reason' => 'object_not_page', 'at' => date(DATE_ATOM)];
+                $capture->markProcessed((int) $envelope['id'], $startedAt, $trace);
+                return $this->response->setStatusCode(200)->setJSON(['status' => 'ignored']);
+            }
+
+            foreach ($payload['entry'] ?? [] as $entry) {
+                foreach ($entry['messaging'] ?? [] as $event) {
+                    $this->storeAndProcessEvent($event);
+                }
+
+                $pageId = (string) ($entry['id'] ?? '');
+                foreach ($entry['changes'] ?? [] as $change) {
+                    $this->processPageChange($pageId, $change);
+                }
+            }
+
+            $trace[] = ['step' => 'webhook_processed', 'at' => date(DATE_ATOM)];
+            $capture->markProcessed((int) $envelope['id'], $startedAt, $trace);
+
             return $this->response->setStatusCode(200)->setJSON([
-                'status' => 'ignored',
+                'status' => 'ok',
+                'correlation_id' => $envelope['correlation_id'],
+            ]);
+        } catch (Throwable $error) {
+            $trace[] = ['step' => 'webhook_failed', 'message' => $error->getMessage(), 'at' => date(DATE_ATOM)];
+            $capture->markFailed((int) $envelope['id'], $startedAt, $error->getMessage(), $trace);
+            log_message('error', 'Meta webhook failed [' . $envelope['correlation_id'] . ']: ' . $error->getMessage());
+
+            return $this->response->setStatusCode(500)->setJSON([
+                'status' => 'error',
+                'correlation_id' => $envelope['correlation_id'],
             ]);
         }
-
-        foreach ($payload['entry'] ?? [] as $entry) {
-            foreach ($entry['messaging'] ?? [] as $event) {
-                $this->storeAndProcessEvent($event);
-            }
-
-            $pageId = (string) ($entry['id'] ?? '');
-
-            foreach ($entry['changes'] ?? [] as $change) {
-                $this->processPageChange($pageId, $change);
-            }
-        }
-
-        return $this->response->setStatusCode(200)->setJSON([
-            'status' => 'ok',
-        ]);
     }
 
     private function storeAndProcessEvent(array $event): void
     {
         $senderId = $event['sender']['id'] ?? null;
         $recipientId = $event['recipient']['id'] ?? null;
-
-        $eventType = 'unknown';
-
-        if (isset($event['message'])) {
-            $eventType = 'message';
-        }
-
-        if (isset($event['postback'])) {
-            $eventType = 'postback';
-        }
-
+        $eventType = isset($event['message']) ? 'message' : (isset($event['postback']) ? 'postback' : 'unknown');
         $eventModel = new WebhookEventModel();
 
         $eventId = $eventModel->insert([
@@ -83,35 +102,49 @@ class WebhookController extends BaseController
             'processed' => 0,
         ]);
 
-        if (!$senderId) {
-            return;
-        }
+        if (! $senderId) return;
 
         $processor = new MessengerWebhookProcessor();
-
-        if ($eventType === 'message') {
-            $processor->processIncomingMessage($senderId, $event);
-        }
-
-        if ($eventType === 'postback') {
-            $processor->processPostback($senderId, $event);
-        }
-
-        $eventModel->update($eventId, [
-            'processed' => 1,
-            //'processed_at' => date('Y-m-d H:i:s'),
-        ]);
+        if ($eventType === 'message') $processor->processIncomingMessage($senderId, $event);
+        if ($eventType === 'postback') $processor->processPostback($senderId, $event);
+        $eventModel->update($eventId, ['processed' => 1]);
     }
 
     private function processPageChange(string $pageId, array $change): void
     {
-        try {
-            (new PublicEngagementProcessor())->process($pageId, $change);
-        } catch (Throwable $error) {
-            log_message(
-                'error',
-                'Public Engagement webhook error: ' . $error->getMessage()
-            );
+        (new PublicEngagementProcessor())->process($pageId, $change);
+    }
+
+    private function detectEnvelopeType(array $payload): string
+    {
+        foreach ($payload['entry'] ?? [] as $entry) {
+            if (! empty($entry['messaging'])) return 'MESSAGING_WEBHOOK';
+            if (! empty($entry['changes'])) return 'PAGE_CHANGE_WEBHOOK';
         }
+        return 'META_WEBHOOK';
+    }
+
+    private function externalEventId(array $payload): ?string
+    {
+        $entry = $payload['entry'][0] ?? [];
+        $event = $entry['messaging'][0] ?? [];
+        $change = $entry['changes'][0]['value'] ?? [];
+
+        return $event['message']['mid']
+            ?? $event['postback']['mid']
+            ?? $change['comment_id']
+            ?? $change['post_id']
+            ?? null;
+    }
+
+    private function normalizedHeaders(): array
+    {
+        $headers = [];
+        foreach ($this->request->headers() as $name => $header) {
+            $headers[(string) $name] = method_exists($header, 'getValueLine')
+                ? $header->getValueLine()
+                : (string) $header;
+        }
+        return $headers;
     }
 }
