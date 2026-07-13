@@ -4,7 +4,9 @@ namespace Config;
 
 use CodeIgniter\Config\BaseService;
 use Modules\Citizen\Application\CitizenResolverService;
+use Modules\Citizen\Application\Queries\CitizenTimelineQueryService;
 use Modules\Citizen\Infrastructure\Publishers\CitizenIdentityEventPublisher;
+use Modules\Citizen\Infrastructure\Repositories\DatabaseCitizenTimelineRepository;
 use Modules\Citizen\Infrastructure\Repositories\DatabaseSocialIdentityRepository;
 use Modules\Core\Event\Models\SystemEventModel;
 use Modules\Core\Event\Services\EventDispatcher;
@@ -122,5 +124,17 @@ class Services extends BaseService
             static::socialIdentityRepository(),
             static::citizenIdentityEventPublisher(),
         );
+    }
+
+    public static function citizenTimelineRepository(bool $getShared = true): DatabaseCitizenTimelineRepository
+    {
+        if ($getShared) return static::getSharedInstance('citizenTimelineRepository');
+        return new DatabaseCitizenTimelineRepository(db_connect());
+    }
+
+    public static function citizenTimeline(bool $getShared = true): CitizenTimelineQueryService
+    {
+        if ($getShared) return static::getSharedInstance('citizenTimeline');
+        return new CitizenTimelineQueryService(static::citizenTimelineRepository());
     }
 }
