@@ -1,7 +1,6 @@
 <?php
 
 namespace Config;
-
 use CodeIgniter\Config\BaseService;
 use Modules\Citizen\Application\CitizenResolverService;
 use Modules\Citizen\Application\Queries\CitizenCardQueryService;
@@ -20,6 +19,7 @@ use Modules\Operations\Application\OperationsDetailQueryService;
 use Modules\Operations\Application\OperationsQueueQueryService;
 use Modules\Operations\Infrastructure\Publishers\WorkItemEventPublisher;
 use Modules\Operations\Infrastructure\Repositories\DatabaseWorkItemRepository;
+use Modules\Publication\Application\PublicationAnalyticsService;
 use Modules\Publication\Application\PublicationProfileQueryService;
 use Modules\Workflow\Repositories\WorkflowRepository;
 use Modules\Workflow\Services\InstrumentedWorkflowRuntimeService;
@@ -157,5 +157,11 @@ class Services extends BaseService
     {
         if ($getShared) return static::getSharedInstance('publicationProfile');
         return new PublicationProfileQueryService(db_connect());
+    }
+
+    public static function publicationAnalytics(bool $getShared = true): PublicationAnalyticsService
+    {
+        if ($getShared) return static::getSharedInstance('publicationAnalytics');
+        return new PublicationAnalyticsService();
     }
 }
