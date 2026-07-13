@@ -28,6 +28,8 @@ final class PublicationsController extends BaseController
             throw PageNotFoundException::forPageNotFound('Publicación no encontrada.');
         }
 
+        $profile = service('publicationCitizenIdentity')->enrich($profile);
+
         return view('Modules\Publication\Views\show_threads', [
             'title' => 'Publicación #' . $id,
             ...$profile,
