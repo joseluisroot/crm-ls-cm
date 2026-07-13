@@ -1,7 +1,11 @@
 <?php
 
 namespace Config;
+
 use CodeIgniter\Config\BaseService;
+use Modules\Citizen\Application\CitizenResolverService;
+use Modules\Citizen\Infrastructure\Publishers\CitizenIdentityEventPublisher;
+use Modules\Citizen\Infrastructure\Repositories\DatabaseSocialIdentityRepository;
 use Modules\Core\Event\Models\SystemEventModel;
 use Modules\Core\Event\Services\EventDispatcher;
 use Modules\Core\Event\Services\EventEngine;
@@ -93,5 +97,26 @@ class Services extends BaseService
     {
         if ($getShared) return static::getSharedInstance('operationsDetailQuery');
         return new OperationsDetailQueryService(db_connect());
+    }
+
+    public static function socialIdentityRepository(bool $getShared = true): DatabaseSocialIdentityRepository
+    {
+        if ($getShared) return static::getSharedInstance('socialIdentityRepository');
+        return new DatabaseSocialIdentityRepository();
+    }
+
+    public static function citizenIdentityEventPublisher(bool $getShared = true): CitizenIdentityEventPublisher
+    {
+        if ($getShared) return static::getSharedInstance('citizenIdentityEventPublisher');
+        return new CitizenIdentityEventPublisher();
+    }
+
+    public static function citizenResolver(bool $getShared = true): CitizenResolverService
+    {
+        if ($getShared) return static::getSharedInstance('citizenResolver');
+        return new CitizenResolverService(
+            static::socialIdentityRepository(),
+            static::citizenIdentityEventPublisher(),
+        );
     }
 }
