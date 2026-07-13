@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Publication;
 
-use Modules\Citizen\Application\CitizenResolverService;
 use Modules\Publication\Application\ResolvePublicationParticipantsService;
 use PHPUnit\Framework\TestCase;
 
@@ -12,10 +11,7 @@ final class ResolvePublicationParticipantsServiceTest extends TestCase
 {
     public function testCandidatesOnlyContainUnresolvedParticipantsWithExternalId(): void
     {
-        $resolver = $this->createMock(CitizenResolverService::class);
-        $service = new ResolvePublicationParticipantsService($resolver);
-
-        $candidates = $service->candidates([
+        $candidates = ResolvePublicationParticipantsService::candidates([
             [
                 'external_id' => 'facebook-1',
                 'name' => 'Ana',
