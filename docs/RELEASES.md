@@ -71,7 +71,16 @@ Objetivo de negocio: convertir interacciones relevantes en trabajo operativo org
 - conserva metadata del origen en identidad y Work Item;
 - publica `operations.work_item.citizen_linked`.
 
+### Citizen Timeline Foundation
+- contratos y DTOs estables para elementos del Timeline;
+- repositorio agregador sobre `work_items` y `system_events`;
+- métricas de Work Items abiertos, casos e identidades;
+- servicio `CitizenTimelineQueryService` registrado en `Config\\Services`;
+- perfil `/admin/citizens/{id}` renovado;
+- identidades vinculadas, relaciones actuales y Timeline cronológico visibles;
+- pruebas unitarias del servicio de consulta.
+
 ### Próximo incremento
-- construir Citizen Timeline;
-- incorporar Citizen Card en Operations;
+- agregar comentarios, Messenger y reacciones al Timeline;
+- construir Citizen Card reutilizable desde Operations;
 - preparar el puente Citizen → Case.
