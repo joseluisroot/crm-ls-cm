@@ -20,6 +20,7 @@ use Modules\Operations\Application\OperationsQueueQueryService;
 use Modules\Operations\Infrastructure\Publishers\WorkItemEventPublisher;
 use Modules\Operations\Infrastructure\Repositories\DatabaseWorkItemRepository;
 use Modules\Publication\Application\CommentThreadService;
+use Modules\Publication\Application\FanPageActorClassifier;
 use Modules\Publication\Application\PublicationAnalyticsService;
 use Modules\Publication\Application\PublicationCitizenIdentityService;
 use Modules\Publication\Application\PublicationProfileQueryService;
@@ -171,6 +172,12 @@ class Services extends BaseService
     {
         if ($getShared) return static::getSharedInstance('publicationCitizenIdentity');
         return new PublicationCitizenIdentityService(db_connect());
+    }
+
+    public static function fanPageActorClassifier(bool $getShared = true): FanPageActorClassifier
+    {
+        if ($getShared) return static::getSharedInstance('fanPageActorClassifier');
+        return new FanPageActorClassifier();
     }
 
     public static function resolvePublicationParticipants(bool $getShared = true): ResolvePublicationParticipantsService
