@@ -22,6 +22,18 @@ foreach ($activity as $day) $maxActivity = max($maxActivity, (int) ($day['total'
     <?php endif; ?>
 </div>
 
+<?php foreach ([
+    'participant_resolution_success' => 'border-emerald-200 bg-emerald-50 text-emerald-800',
+    'participant_resolution_info' => 'border-blue-200 bg-blue-50 text-blue-800',
+    'participant_resolution_warning' => 'border-amber-200 bg-amber-50 text-amber-800',
+] as $flashKey => $classes): ?>
+    <?php if (session()->getFlashdata($flashKey)): ?>
+        <div class="mb-6 rounded-2xl border px-5 py-4 font-semibold <?= $classes ?>">
+            <?= esc(session()->getFlashdata($flashKey)) ?>
+        </div>
+    <?php endif; ?>
+<?php endforeach; ?>
+
 <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4 mb-8">
     <?php foreach ([
         'Comentarios' => $metrics['comments'], 'Pendientes' => $metrics['pending_comments'],
@@ -97,8 +109,20 @@ foreach ($activity as $day) $maxActivity = max($maxActivity, (int) ($day['total'
     <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm"><h2 class="text-xl font-black">Reacciones</h2><div class="mt-5 space-y-3"><?php foreach ($reaction_breakdown as $type => $total): ?><div class="flex justify-between rounded-xl bg-slate-50 border p-3"><span class="font-bold"><?= esc($type) ?></span><span class="font-black"><?= esc($total) ?></span></div><?php endforeach; ?><?php if (empty($reaction_breakdown)): ?><p class="text-slate-500">Sin reacciones activas.</p><?php endif; ?></div></section>
 
     <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-        <h2 class="text-xl font-black">Participantes principales</h2>
-        <p class="text-sm text-slate-500 mt-1">Vinculación exacta por identidad social de Facebook.</p>
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div>
+                <h2 class="text-xl font-black">Participantes principales</h2>
+                <p class="text-sm text-slate-500 mt-1">Vinculación exacta por identidad social de Facebook.</p>
+            </div>
+            <?php if (($identityMetrics['unidentified_participants'] ?? 0) > 0): ?>
+                <form method="post" action="<?= site_url('admin/publications/' . $publication['id'] . '/resolve-participants') ?>">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-pink-600 text-white text-sm font-black hover:bg-pink-700" onclick="return confirm('Se crearán Citizens para los participantes aún no vinculados. ¿Continuar?')">
+                        Resolver <?= esc($identityMetrics['unidentified_participants']) ?> pendiente(s)
+                    </button>
+                </form>
+            <?php endif; ?>
+        </div>
         <div class="mt-5 space-y-4">
             <?php foreach (array_slice($participants, 0, 15) as $participant): ?>
                 <div class="rounded-xl border border-slate-200 p-4">

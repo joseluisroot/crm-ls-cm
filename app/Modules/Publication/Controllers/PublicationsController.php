@@ -37,4 +37,37 @@ final class PublicationsController extends BaseController
             'commentThreads' => service('commentThreads')->build($profile['comments'] ?? []),
         ]);
     }
+
+    public function resolveParticipants(int $id)
+    {
+        $profile = service('publicationProfile')->profile($id);
+
+        if (! $profile) {
+            throw PageNotFoundException::forPageNotFound('Publicación no encontrada.');
+        }
+
+        $profile = service('publicationCitizenIdentity')->enrich($profile);
+        $result = service('resolvePublicationParticipants')->resolve(
+            $id,
+            $profile['participants'] ?? [],
+        );
+
+        if ($result['requested'] === 0) {
+            return redirect()->to(site_url('admin/publications/' . $id))
+                ->with('participant_resolution_info', 'No existen participantes pendientes con identificador externo válido.');
+        }
+
+        $message = sprintf(
+            'Resolución completada: %d de %d participantes procesados correctamente.',
+            $result['resolved'],
+            $result['requested'],
+        );
+
+        if ($result['failed'] > 0) {
+            $message .= sprintf(' %d participante(s) no pudieron procesarse.', $result['failed']);
+        }
+
+        return redirect()->to(site_url('admin/publications/' . $id))
+            ->with($result['failed'] > 0 ? 'participant_resolution_warning' : 'participant_resolution_success', $message);
+    }
 }
