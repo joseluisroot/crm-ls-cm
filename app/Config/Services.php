@@ -4,8 +4,10 @@ namespace Config;
 
 use CodeIgniter\Config\BaseService;
 use Modules\Citizen\Application\CitizenResolverService;
+use Modules\Citizen\Application\Queries\CitizenCardQueryService;
 use Modules\Citizen\Application\Queries\CitizenTimelineQueryService;
 use Modules\Citizen\Infrastructure\Publishers\CitizenIdentityEventPublisher;
+use Modules\Citizen\Infrastructure\Repositories\DatabaseCitizenCardRepository;
 use Modules\Citizen\Infrastructure\Repositories\DatabaseCitizenTimelineRepository;
 use Modules\Citizen\Infrastructure\Repositories\DatabaseSocialIdentityRepository;
 use Modules\Core\Event\Models\SystemEventModel;
@@ -136,5 +138,17 @@ class Services extends BaseService
     {
         if ($getShared) return static::getSharedInstance('citizenTimeline');
         return new CitizenTimelineQueryService(static::citizenTimelineRepository());
+    }
+
+    public static function citizenCardRepository(bool $getShared = true): DatabaseCitizenCardRepository
+    {
+        if ($getShared) return static::getSharedInstance('citizenCardRepository');
+        return new DatabaseCitizenCardRepository(db_connect());
+    }
+
+    public static function citizenCard(bool $getShared = true): CitizenCardQueryService
+    {
+        if ($getShared) return static::getSharedInstance('citizenCard');
+        return new CitizenCardQueryService(static::citizenCardRepository());
     }
 }
