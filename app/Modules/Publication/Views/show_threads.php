@@ -6,6 +6,7 @@ $kpis = $analytics['kpis'] ?? [];
 $activity = $analytics['activity_by_date'] ?? [];
 $threadMetrics = $commentThreads['metrics'] ?? [];
 $threads = $commentThreads['threads'] ?? [];
+$identityMetrics = $identity_metrics ?? [];
 $maxActivity = 1;
 foreach ($activity as $day) $maxActivity = max($maxActivity, (int) ($day['total'] ?? 0));
 ?>
@@ -21,10 +22,12 @@ foreach ($activity as $day) $maxActivity = max($maxActivity, (int) ($day['total'
     <?php endif; ?>
 </div>
 
-<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+<div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4 mb-8">
     <?php foreach ([
         'Comentarios' => $metrics['comments'], 'Pendientes' => $metrics['pending_comments'],
         'Reacciones' => $metrics['reactions'], 'Participantes' => $metrics['participants'],
+        'Identificados' => $identityMetrics['identified_participants'] ?? 0,
+        'Sin vincular' => $identityMetrics['unidentified_participants'] ?? 0,
         'Work Items' => $metrics['work_items'], 'Casos' => $metrics['cases'],
     ] as $label => $value): ?>
         <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
@@ -42,10 +45,7 @@ foreach ($activity as $day) $maxActivity = max($maxActivity, (int) ($day['total'
 
 <section class="bg-slate-950 text-white rounded-2xl p-6 shadow-sm mb-6">
     <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4">
-        <div>
-            <p class="text-xs uppercase tracking-[0.25em] text-pink-400 font-bold">Publication Analytics</p>
-            <h2 class="text-2xl font-black mt-2">Indicadores de atención e impacto</h2>
-        </div>
+        <div><p class="text-xs uppercase tracking-[0.25em] text-pink-400 font-bold">Publication Analytics</p><h2 class="text-2xl font-black mt-2">Indicadores de atención e impacto</h2></div>
         <div><p class="text-xs uppercase tracking-widest text-slate-500">Interacciones</p><p class="text-4xl font-black mt-1"><?= esc($kpis['total_interactions'] ?? 0) ?></p></div>
     </div>
     <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mt-7">
@@ -80,7 +80,7 @@ foreach ($activity as $day) $maxActivity = max($maxActivity, (int) ($day['total'
 
 <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mb-6">
     <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4">
-        <div><p class="text-xs uppercase tracking-[0.22em] text-pink-600 font-bold">Comment Threads</p><h2 class="text-2xl font-black text-slate-900 mt-2">Conversaciones de la publicación</h2><p class="text-sm text-slate-500 mt-2">Comentarios raíz y respuestas ordenados según su relación real.</p></div>
+        <div><p class="text-xs uppercase tracking-[0.22em] text-pink-600 font-bold">Comment Threads</p><h2 class="text-2xl font-black text-slate-900 mt-2">Conversaciones de la publicación</h2><p class="text-sm text-slate-500 mt-2">Los autores vinculados permiten abrir directamente su perfil ciudadano.</p></div>
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <?php foreach (['Raíces' => $threadMetrics['root_comments'] ?? 0, 'Respuestas' => $threadMetrics['replies'] ?? 0, 'Profundidad' => $threadMetrics['max_depth'] ?? 0, 'Huérfanos' => $threadMetrics['orphan_comments'] ?? 0] as $label => $value): ?>
                 <div class="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3"><p class="text-[11px] uppercase text-slate-400"><?= esc($label) ?></p><p class="text-xl font-black mt-1"><?= esc($value) ?></p></div>
@@ -95,7 +95,31 @@ foreach ($activity as $day) $maxActivity = max($maxActivity, (int) ($day['total'
 
 <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
     <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm"><h2 class="text-xl font-black">Reacciones</h2><div class="mt-5 space-y-3"><?php foreach ($reaction_breakdown as $type => $total): ?><div class="flex justify-between rounded-xl bg-slate-50 border p-3"><span class="font-bold"><?= esc($type) ?></span><span class="font-black"><?= esc($total) ?></span></div><?php endforeach; ?><?php if (empty($reaction_breakdown)): ?><p class="text-slate-500">Sin reacciones activas.</p><?php endif; ?></div></section>
-    <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm"><h2 class="text-xl font-black">Participantes principales</h2><div class="mt-5 space-y-4"><?php foreach (array_slice($participants, 0, 15) as $participant): ?><div class="border-b pb-4"><p class="font-bold"><?= esc($participant['name']) ?></p><p class="text-sm text-slate-600 mt-2"><?= esc($participant['comments_count']) ?> comentarios · <?= esc($participant['reactions_count']) ?> reacciones</p></div><?php endforeach; ?><?php if (empty($participants)): ?><p class="text-slate-500">Sin participantes identificados.</p><?php endif; ?></div></section>
+
+    <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <h2 class="text-xl font-black">Participantes principales</h2>
+        <p class="text-sm text-slate-500 mt-1">Vinculación exacta por identidad social de Facebook.</p>
+        <div class="mt-5 space-y-4">
+            <?php foreach (array_slice($participants, 0, 15) as $participant): ?>
+                <div class="rounded-xl border border-slate-200 p-4">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <?php if (! empty($participant['citizen_id'])): ?>
+                                <a href="<?= site_url('admin/citizens/' . $participant['citizen_id']) ?>" class="font-black text-pink-700 hover:text-pink-900"><?= esc($participant['citizen_name'] ?: $participant['name']) ?></a>
+                                <p class="text-xs text-emerald-700 font-bold mt-1">Identidad resuelta · <?= esc($participant['identity_actor_type']) ?> · <?= esc($participant['identity_confidence']) ?>%</p>
+                            <?php else: ?>
+                                <p class="font-bold text-slate-800"><?= esc($participant['name']) ?></p>
+                                <p class="text-xs text-slate-400 mt-1">Participante todavía no vinculado</p>
+                            <?php endif; ?>
+                        </div>
+                        <span class="px-3 py-1 rounded-full <?= ! empty($participant['citizen_id']) ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500' ?> text-xs font-bold"><?= ! empty($participant['citizen_id']) ? 'Citizen #' . esc($participant['citizen_id']) : 'Sin Citizen' ?></span>
+                    </div>
+                    <p class="text-sm text-slate-600 mt-3"><?= esc($participant['comments_count']) ?> comentarios · <?= esc($participant['reactions_count']) ?> reacciones</p>
+                </div>
+            <?php endforeach; ?>
+            <?php if (empty($participants)): ?><p class="text-slate-500">Sin participantes identificados.</p><?php endif; ?>
+        </div>
+    </section>
 </div>
 
 <?= $this->endSection() ?>
