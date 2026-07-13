@@ -28,10 +28,11 @@ final class PublicationsController extends BaseController
             throw PageNotFoundException::forPageNotFound('Publicación no encontrada.');
         }
 
-        return view('Modules\Publication\Views\show', [
+        return view('Modules\Publication\Views\show_threads', [
             'title' => 'Publicación #' . $id,
             ...$profile,
             'analytics' => service('publicationAnalytics')->analyze($profile),
+            'commentThreads' => service('commentThreads')->build($profile['comments'] ?? []),
         ]);
     }
 }

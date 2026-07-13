@@ -19,6 +19,7 @@ use Modules\Operations\Application\OperationsDetailQueryService;
 use Modules\Operations\Application\OperationsQueueQueryService;
 use Modules\Operations\Infrastructure\Publishers\WorkItemEventPublisher;
 use Modules\Operations\Infrastructure\Repositories\DatabaseWorkItemRepository;
+use Modules\Publication\Application\CommentThreadService;
 use Modules\Publication\Application\PublicationAnalyticsService;
 use Modules\Publication\Application\PublicationProfileQueryService;
 use Modules\Workflow\Repositories\WorkflowRepository;
@@ -89,11 +90,7 @@ class Services extends BaseService
     public static function facebookCommentWorkItemAdapter(bool $getShared = true): FacebookCommentWorkItemAdapter
     {
         if ($getShared) return static::getSharedInstance('facebookCommentWorkItemAdapter');
-        return new FacebookCommentWorkItemAdapter(
-            static::citizenOperations(),
-            static::citizenResolver(),
-            db_connect(),
-        );
+        return new FacebookCommentWorkItemAdapter(static::citizenOperations(), static::citizenResolver(), db_connect());
     }
 
     public static function operationsQueueQuery(bool $getShared = true): OperationsQueueQueryService
@@ -123,10 +120,7 @@ class Services extends BaseService
     public static function citizenResolver(bool $getShared = true): CitizenResolverService
     {
         if ($getShared) return static::getSharedInstance('citizenResolver');
-        return new CitizenResolverService(
-            static::socialIdentityRepository(),
-            static::citizenIdentityEventPublisher(),
-        );
+        return new CitizenResolverService(static::socialIdentityRepository(), static::citizenIdentityEventPublisher());
     }
 
     public static function citizenTimelineRepository(bool $getShared = true): DatabaseCitizenTimelineRepository
@@ -163,5 +157,11 @@ class Services extends BaseService
     {
         if ($getShared) return static::getSharedInstance('publicationAnalytics');
         return new PublicationAnalyticsService();
+    }
+
+    public static function commentThreads(bool $getShared = true): CommentThreadService
+    {
+        if ($getShared) return static::getSharedInstance('commentThreads');
+        return new CommentThreadService();
     }
 }
