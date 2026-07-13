@@ -13,6 +13,8 @@ use Modules\Core\Event\Models\SystemEventModel;
 use Modules\Core\Event\Services\EventDispatcher;
 use Modules\Core\Event\Services\EventEngine;
 use Modules\Core\Event\Services\EventRegistry;
+use Modules\Integration\Application\IntegrationEventCaptureService;
+use Modules\Integration\Infrastructure\DatabaseIntegrationEventRepository;
 use Modules\Operations\Application\CitizenOperationsService;
 use Modules\Operations\Application\FacebookCommentWorkItemAdapter;
 use Modules\Operations\Application\OperationsDetailQueryService;
@@ -34,6 +36,18 @@ use Modules\Workflow\Services\WorkflowRuntimeService;
 
 class Services extends BaseService
 {
+    public static function integrationEventRepository(bool $getShared = true): DatabaseIntegrationEventRepository
+    {
+        if ($getShared) return static::getSharedInstance('integrationEventRepository');
+        return new DatabaseIntegrationEventRepository(db_connect());
+    }
+
+    public static function integrationEventCapture(bool $getShared = true): IntegrationEventCaptureService
+    {
+        if ($getShared) return static::getSharedInstance('integrationEventCapture');
+        return new IntegrationEventCaptureService(static::integrationEventRepository());
+    }
+
     public static function eventRegistry(bool $getShared = true): EventRegistry
     {
         if ($getShared) return static::getSharedInstance('eventRegistry');
