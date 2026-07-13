@@ -4,6 +4,8 @@ namespace Modules\Operations\Controllers;
 
 use App\Controllers\BaseController;
 use CodeIgniter\Exceptions\PageNotFoundException;
+use Modules\Response\Application\QuickActionCatalog;
+use Modules\Response\Application\ResponseDraftService;
 use Throwable;
 
 final class OperationsController extends BaseController
@@ -41,10 +43,11 @@ final class OperationsController extends BaseController
             $citizenCard = service('citizenCard')->get((int) $item['citizen_id']);
         }
 
+        $catalog = new QuickActionCatalog();
         $authorName = $item['source']['author_name'] ?? $item['title'] ?? null;
         $quickActions = array_map(
-            static fn (array $action): array => service('quickActions')->personalize($action, $authorName),
-            service('quickActions')->all(),
+            static fn (array $action): array => $catalog->personalize($action, $authorName),
+            $catalog->all(),
         );
 
         return view('Modules\Operations\Views\show', [
@@ -55,7 +58,7 @@ final class OperationsController extends BaseController
             'users' => $query->users(),
             'statuses' => $query->statuses(),
             'priorities' => $query->priorities(),
-            'responseDraft' => service('responseDrafts')->findForWorkItem($id),
+            'responseDraft' => (new ResponseDraftService(db_connect()))->findForWorkItem($id),
             'quickActions' => $quickActions,
         ]);
     }
