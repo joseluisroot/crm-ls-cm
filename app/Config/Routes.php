@@ -37,6 +37,7 @@ $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
     $routes->get('my-cases', '\Modules\Cases\Controllers\CasesController::myCases');
 
     $routes->get('messenger/events', '\Modules\Messenger\Controllers\MessengerEventsController::index');
+    $routes->post('integration/events/(:num)/replay', '\Modules\Integration\Controllers\IntegrationReplayController::replay/$1');
     $routes->get('notifications', '\Modules\Notification\Controllers\NotificationsController::index');
     $routes->post('notifications/(:num)/read', '\Modules\Notification\Controllers\NotificationsController::markAsRead/$1');
     $routes->get('analytics', '\Modules\Analytics\Controllers\AnalyticsController::index');
