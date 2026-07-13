@@ -22,17 +22,25 @@ class CitizensController extends BaseController
 
     public function show($id)
     {
-        $citizen = (new CitizenModel())->find($id);
+        $citizenId = (int) $id;
+        $citizen = (new CitizenModel())->find($citizenId);
 
-        if (!$citizen) {
+        if (! $citizen) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Ciudadano no encontrado');
         }
 
         return view('Modules\Citizens\Views\show', [
             'title' => 'Perfil ciudadano',
             'citizen' => $citizen,
-            'conversations' => (new ConversationModel())->where('citizen_id', $id)->findAll(),
-            'cases' => (new CaseModel())->where('citizen_id', $id)->findAll(),
+            'conversations' => (new ConversationModel())->where('citizen_id', $citizenId)->findAll(),
+            'cases' => (new CaseModel())->where('citizen_id', $citizenId)->findAll(),
+            'timeline' => service('citizenTimeline')->timeline($citizenId),
+            'identities' => db_connect()->table('citizen_social_identities')
+                ->where('citizen_id', $citizenId)
+                ->where('is_active', 1)
+                ->orderBy('created_at', 'ASC')
+                ->get()
+                ->getResultArray(),
         ]);
     }
 }
