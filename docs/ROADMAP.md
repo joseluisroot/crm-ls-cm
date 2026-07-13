@@ -36,6 +36,7 @@
 - registro de primera respuesta
 - timeline operativo basado en Core Event Engine
 - enlace idempotente Work Item → Citizen
+- Citizen Card embebida en Operations
 
 ### Siguientes incrementos
 - creación automática de Work Items durante la ingestión del webhook
@@ -69,9 +70,16 @@
 - Timeline cronológico en `/admin/citizens/{id}`
 - perfil ciudadano renovado con identidades y relaciones actuales
 
+### Citizen Card
+- DTO y contrato reutilizable
+- repositorio agregado de Citizen, Work Items, casos, conversaciones e identidades
+- componente visual reutilizable
+- integración en `/admin/operations/{id}`
+- enlace directo al perfil ciudadano
+
 ### Siguientes incrementos
 - incorporar comentarios, Messenger y reacciones al Timeline
-- Citizen Card reutilizable desde Operations
+- Publication Domain
 - Citizen 360
 
 ## v1.2.x Content & Identity Enrichment

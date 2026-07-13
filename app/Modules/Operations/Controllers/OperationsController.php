@@ -36,9 +36,15 @@ final class OperationsController extends BaseController
             throw PageNotFoundException::forPageNotFound('Work Item no encontrado.');
         }
 
+        $citizenCard = null;
+        if (! empty($item['citizen_id'])) {
+            $citizenCard = service('citizenCard')->get((int) $item['citizen_id']);
+        }
+
         return view('Modules\Operations\Views\show', [
             'title' => 'Work Item #' . $id,
             'item' => $item,
+            'citizenCard' => $citizenCard,
             'timeline' => $query->timeline($id),
             'users' => $query->users(),
             'statuses' => $query->statuses(),
