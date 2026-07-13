@@ -48,7 +48,8 @@ Objetivo de negocio: convertir interacciones relevantes en trabajo operativo org
 - timestamps de apertura, resolución y cierre;
 - timeline auditable desde `system_events`;
 - relación visible con ciudadano y caso cuando existe;
-- acceso desde la Unified Operations Queue.
+- acceso desde la Unified Operations Queue;
+- Citizen Card reutilizable con contexto ciudadano.
 
 ## v1.2 Citizen Domain — en progreso
 
@@ -75,12 +76,31 @@ Objetivo de negocio: convertir interacciones relevantes en trabajo operativo org
 - contratos y DTOs estables para elementos del Timeline;
 - repositorio agregador sobre `work_items` y `system_events`;
 - métricas de Work Items abiertos, casos e identidades;
-- servicio `CitizenTimelineQueryService` registrado en `Config\\Services`;
+- servicio `CitizenTimelineQueryService` registrado en `Config\Services`;
 - perfil `/admin/citizens/{id}` renovado;
 - identidades vinculadas, relaciones actuales y Timeline cronológico visibles;
 - pruebas unitarias del servicio de consulta.
 
-### Próximo incremento
-- agregar comentarios, Messenger y reacciones al Timeline;
-- construir Citizen Card reutilizable desde Operations;
-- preparar el puente Citizen → Case.
+### Citizen Card
+- DTO, repositorio y Query Service reutilizables;
+- componente visual integrado en Operations;
+- contexto de identidades, Work Items, conversaciones y casos;
+- acceso directo al perfil ciudadano.
+
+## v1.2.x Publication Domain — en progreso
+
+### Publication Profile
+- Publication Center en `/admin/publications`;
+- perfil consolidado por publicación;
+- comentarios, reacciones y participantes;
+- Work Items y casos relacionados;
+- enlace directo a Facebook y Operations.
+
+### Publication Analytics
+- KPIs de interacciones y respuesta;
+- tasa de atención pendiente;
+- conversión a Work Items y casos;
+- concentración de participación;
+- actividad diaria de comentarios y reacciones;
+- desglose por estado y prioridad;
+- pruebas unitarias de cálculos analíticos.
