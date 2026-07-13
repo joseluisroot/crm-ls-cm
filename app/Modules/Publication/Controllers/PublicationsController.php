@@ -32,6 +32,7 @@ final class PublicationsController extends BaseController
             'title' => 'Publicación #' . $id,
             ...$profile,
             'analytics' => service('publicationAnalytics')->analyze($profile),
+            'commentThreads' => service('commentThreads')->build($profile['comments'] ?? []),
         ]);
     }
 }
