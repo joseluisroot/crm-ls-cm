@@ -21,13 +21,12 @@ $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
     $routes->post('operations/(:num)/priority', '\Modules\Operations\Controllers\OperationsController::changePriority/$1');
     $routes->post('operations/(:num)/responded', '\Modules\Operations\Controllers\OperationsController::markResponded/$1');
     $routes->post('operations/(:num)/response-draft', '\Modules\Response\Controllers\ResponseDraftController::save/$1');
+    $routes->post('operations/(:num)/response-send', '\Modules\Response\Controllers\ResponseDraftController::send/$1');
 
     $routes->get('citizens', '\Modules\Citizens\Controllers\CitizensController::index');
     $routes->get('citizens/(:num)', '\Modules\Citizens\Controllers\CitizensController::show/$1');
-
     $routes->get('conversations', '\Modules\Conversations\Controllers\ConversationsController::index');
     $routes->get('conversations/(:num)', '\Modules\Conversations\Controllers\ConversationsController::show/$1');
-
     $routes->get('cases', '\Modules\Cases\Controllers\CasesController::index');
     $routes->get('cases/create', '\Modules\Cases\Controllers\CasesController::create');
     $routes->post('cases/store', '\Modules\Cases\Controllers\CasesController::store');
@@ -56,13 +55,11 @@ $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
     $routes->get('api/workflows/runtime', '\Modules\Workflow\Controllers\RuntimeInspectorController::apiIndex');
     $routes->get('api/workflows/runtime/(:num)', '\Modules\Workflow\Controllers\RuntimeInspectorController::apiShow/$1');
     $routes->get('api/workflows/runtime/(:num)/timeline', '\Modules\Workflow\Controllers\RuntimeInspectorController::timeline/$1');
-
     $routes->get('workflows/simulator', '\Modules\Workflow\Controllers\WorkflowSimulatorController::index');
     $routes->post('workflows/simulator/start', '\Modules\Workflow\Controllers\WorkflowSimulatorController::start');
     $routes->get('workflows/simulator/(:num)', '\Modules\Workflow\Controllers\WorkflowSimulatorController::show/$1');
     $routes->post('workflows/simulator/(:num)/interact', '\Modules\Workflow\Controllers\WorkflowSimulatorController::interact/$1');
     $routes->post('workflows/simulator/(:num)/restart', '\Modules\Workflow\Controllers\WorkflowSimulatorController::restart/$1');
-
     $routes->get('workflows', '\Modules\Workflow\Controllers\WorkflowController::index');
     $routes->get('workflows/create', '\Modules\Workflow\Controllers\WorkflowController::create');
     $routes->post('workflows', '\Modules\Workflow\Controllers\WorkflowController::store');
