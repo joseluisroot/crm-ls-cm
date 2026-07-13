@@ -20,6 +20,7 @@ $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
     $routes->post('operations/(:num)/status', '\Modules\Operations\Controllers\OperationsController::changeStatus/$1');
     $routes->post('operations/(:num)/priority', '\Modules\Operations\Controllers\OperationsController::changePriority/$1');
     $routes->post('operations/(:num)/responded', '\Modules\Operations\Controllers\OperationsController::markResponded/$1');
+    $routes->post('operations/(:num)/response-draft', '\Modules\Response\Controllers\ResponseDraftController::save/$1');
 
     $routes->get('citizens', '\Modules\Citizens\Controllers\CitizensController::index');
     $routes->get('citizens/(:num)', '\Modules\Citizens\Controllers\CitizensController::show/$1');
