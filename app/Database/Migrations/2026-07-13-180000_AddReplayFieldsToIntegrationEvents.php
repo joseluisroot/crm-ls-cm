@@ -14,14 +14,12 @@ final class AddReplayFieldsToIntegrationEvents extends Migration
             'replayed_at' => ['type' => 'DATETIME', 'null' => true, 'after' => 'processed_at'],
         ]);
 
-        $this->forge->addKey('original_event_id');
-        $this->forge->addForeignKey('original_event_id', 'integration_events', 'id', 'CASCADE', 'SET NULL');
-        $this->forge->processIndexes('integration_events');
+        $this->db->query('CREATE INDEX idx_integration_events_original_event_id ON integration_events (original_event_id)');
     }
 
     public function down()
     {
-        $this->forge->dropForeignKey('integration_events', 'integration_events_original_event_id_foreign');
+        $this->db->query('DROP INDEX idx_integration_events_original_event_id ON integration_events');
         $this->forge->dropColumn('integration_events', ['original_event_id', 'replay_attempt', 'replayed_at']);
     }
 }
