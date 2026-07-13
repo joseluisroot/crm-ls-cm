@@ -40,23 +40,19 @@ class WebhookController extends BaseController
             source: 'FACEBOOK',
             eventType: $this->detectEnvelopeType($payload),
             payload: $payload,
-            headers: $this->request->headers(),
+            headers: $this->normalizedHeaders(),
             externalEventId: $this->externalEventId($payload),
             endpoint: (string) $this->request->getUri(),
             requestIp: $this->request->getIPAddress(),
             signature: $this->request->getHeaderLine('X-Hub-Signature-256') ?: null,
         );
 
-        $trace = [[
-            'step' => 'integration_event_received',
-            'at' => date(DATE_ATOM),
-        ]];
+        $trace = [['step' => 'integration_event_received', 'at' => date(DATE_ATOM)]];
 
         try {
             if (($payload['object'] ?? null) !== 'page') {
                 $trace[] = ['step' => 'payload_ignored', 'reason' => 'object_not_page', 'at' => date(DATE_ATOM)];
                 $capture->markProcessed((int) $envelope['id'], $startedAt, $trace);
-
                 return $this->response->setStatusCode(200)->setJSON(['status' => 'ignored']);
             }
 
@@ -111,7 +107,6 @@ class WebhookController extends BaseController
         $processor = new MessengerWebhookProcessor();
         if ($eventType === 'message') $processor->processIncomingMessage($senderId, $event);
         if ($eventType === 'postback') $processor->processPostback($senderId, $event);
-
         $eventModel->update($eventId, ['processed' => 1]);
     }
 
@@ -126,7 +121,6 @@ class WebhookController extends BaseController
             if (! empty($entry['messaging'])) return 'MESSAGING_WEBHOOK';
             if (! empty($entry['changes'])) return 'PAGE_CHANGE_WEBHOOK';
         }
-
         return 'META_WEBHOOK';
     }
 
@@ -141,5 +135,16 @@ class WebhookController extends BaseController
             ?? $change['comment_id']
             ?? $change['post_id']
             ?? null;
+    }
+
+    private function normalizedHeaders(): array
+    {
+        $headers = [];
+        foreach ($this->request->headers() as $name => $header) {
+            $headers[(string) $name] = method_exists($header, 'getValueLine')
+                ? $header->getValueLine()
+                : (string) $header;
+        }
+        return $headers;
     }
 }
