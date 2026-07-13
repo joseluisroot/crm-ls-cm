@@ -35,6 +35,7 @@
 - cambio de estado y prioridad
 - registro de primera respuesta
 - timeline operativo basado en Core Event Engine
+- enlace idempotente Work Item → Citizen
 
 ### Siguientes incrementos
 - creación automática de Work Items durante la ingestión del webhook
@@ -53,9 +54,14 @@
 - servicio `CitizenResolverService`
 - eventos `citizen.identity.created` y `citizen.identity.resolved`
 
+### Identity → Operations Integration
+- resolución exacta del autor antes de crear el Work Item
+- creación automática del Citizen cuando la identidad no existe
+- asociación automática de `work_items.citizen_id`
+- actualización idempotente de Work Items importados previamente
+- evento `operations.work_item.citizen_linked`
+
 ### Siguientes incrementos
-- integrar resolución de identidad con comentarios de Facebook
-- asociar automáticamente `work_items.citizen_id`
 - Citizen Timeline
 - Citizen Card
 - Citizen 360
