@@ -28,6 +28,7 @@ final class PublicationsController extends BaseController
             throw PageNotFoundException::forPageNotFound('Publicación no encontrada.');
         }
 
+        $profile = service('fanPageActorClassifier')->enrich($profile);
         $profile = service('publicationCitizenIdentity')->enrich($profile);
 
         return view('Modules\Publication\Views\show_threads', [
@@ -46,6 +47,7 @@ final class PublicationsController extends BaseController
             throw PageNotFoundException::forPageNotFound('Publicación no encontrada.');
         }
 
+        $profile = service('fanPageActorClassifier')->enrich($profile);
         $profile = service('publicationCitizenIdentity')->enrich($profile);
         $result = service('resolvePublicationParticipants')->resolve(
             $id,
@@ -54,7 +56,7 @@ final class PublicationsController extends BaseController
 
         if ($result['requested'] === 0) {
             return redirect()->to(site_url('admin/publications/' . $id))
-                ->with('participant_resolution_info', 'No existen participantes pendientes con identificador externo válido.');
+                ->with('participant_resolution_info', 'No existen participantes ciudadanos pendientes con identificador externo válido.');
         }
 
         $message = sprintf(
