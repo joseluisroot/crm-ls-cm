@@ -39,26 +39,35 @@
 ### Siguientes incrementos
 - creación automática de Work Items durante la ingestión del webhook
 - SLA calculado y alertas de vencimiento
-- Citizen Card
 - respuesta real a comentarios desde CIAC
-- vinculación de identidad social con Citizen
 - conversión de interacción a caso
-- timeline ciudadano unificado
 
-## v1.1.x Content & Identity Enrichment
+## v1.2 Citizen Domain — en progreso
+
+### Citizen Identity Foundation
+- tabla `citizen_social_identities`
+- identidad única por canal y external ID
+- Value Objects de canal, tipo de actor y confianza
+- entidad `SocialIdentity`
+- repositorio desacoplado
+- servicio `CitizenResolverService`
+- eventos `citizen.identity.created` y `citizen.identity.resolved`
+
+### Siguientes incrementos
+- integrar resolución de identidad con comentarios de Facebook
+- asociar automáticamente `work_items.citizen_id`
+- Citizen Timeline
+- Citizen Card
+- Citizen 360
+
+## v1.2.x Content & Identity Enrichment
 
 - Publication y contexto de publicación
 - Conversation Threads
-- clasificación de actores: Citizen, Institution, System y AI
+- clasificación avanzada de actores
 - comportamiento de comentarios ocultos en Meta
+- merge y revisión manual de identidades
 - enlace y sincronización de contenido
-
-## v1.2 Citizen 360
-
-- identidad social controlada
-- historial omnicanal
-- casos, participación y temas
-- métricas de atención
 
 ## v1.3 AI Assisted Operations
 
