@@ -19,7 +19,7 @@ final class ResolvePublicationParticipantsService
 
     public function resolve(int $publicationId, array $participants): array
     {
-        $candidates = $this->candidates($participants);
+        $candidates = self::candidates($participants);
         $result = [
             'publication_id' => $publicationId,
             'requested' => count($candidates),
@@ -57,7 +57,7 @@ final class ResolvePublicationParticipantsService
         return $result;
     }
 
-    public function candidates(array $participants): array
+    public static function candidates(array $participants): array
     {
         $candidates = [];
 
