@@ -79,13 +79,23 @@
 
 ### Siguientes incrementos
 - incorporar comentarios, Messenger y reacciones al Timeline
-- Publication Domain
 - Citizen 360
 
-## v1.2.x Content & Identity Enrichment
+## v1.2.x Publication Domain — en progreso
 
-- Publication y contexto de publicación
+### Publication Profile
+- listado `/admin/publications`
+- perfil `/admin/publications/{id}`
+- métricas de comentarios, reacciones, participantes, Work Items y casos
+- comentarios vinculados con Operations
+- desglose de reacciones
+- ranking inicial de participantes
+- acceso directo al permalink de Facebook
+
+### Siguientes incrementos
+- Publication Analytics
 - Conversation Threads
+- Citizen Card en participantes y comentarios
 - clasificación avanzada de actores
 - comportamiento de comentarios ocultos en Meta
 - merge y revisión manual de identidades
