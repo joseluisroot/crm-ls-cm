@@ -92,8 +92,16 @@
 - ranking inicial de participantes
 - acceso directo al permalink de Facebook
 
+### Publication Analytics
+- KPIs de interacciones, respuesta y atención pendiente
+- tasas de conversión comentario → Work Item y Work Item → caso
+- concentración de participación principal
+- serie cronológica diaria de comentarios y reacciones
+- desglose de estados de comentarios
+- distribución de prioridades operativas
+- visualización integrada en el perfil de publicación
+
 ### Siguientes incrementos
-- Publication Analytics
 - Conversation Threads
 - Citizen Card en participantes y comentarios
 - clasificación avanzada de actores

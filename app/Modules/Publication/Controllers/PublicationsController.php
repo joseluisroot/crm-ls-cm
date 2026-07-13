@@ -31,6 +31,7 @@ final class PublicationsController extends BaseController
         return view('Modules\Publication\Views\show', [
             'title' => 'Publicación #' . $id,
             ...$profile,
+            'analytics' => service('publicationAnalytics')->analyze($profile),
         ]);
     }
 }

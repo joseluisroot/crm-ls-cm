@@ -2,6 +2,15 @@
 
 <?= $this->section('content') ?>
 
+<?php
+$kpis = $analytics['kpis'] ?? [];
+$activity = $analytics['activity_by_date'] ?? [];
+$maxActivity = 1;
+foreach ($activity as $day) {
+    $maxActivity = max($maxActivity, (int) ($day['total'] ?? 0));
+}
+?>
+
 <div class="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-5 mb-8">
     <div>
         <a href="<?= site_url('admin/publications') ?>" class="text-sm font-bold text-pink-600">← Volver a publicaciones</a>
@@ -34,6 +43,89 @@
     <p class="text-slate-700 mt-4 whitespace-pre-line text-lg"><?= esc($publication['message'] ?: 'Publicación sin texto disponible.') ?></p>
     <p class="text-xs text-slate-400 mt-5">Registrada: <?= esc($publication['created_at'] ?? '-') ?></p>
 </section>
+
+<section class="bg-slate-950 text-white rounded-2xl p-6 shadow-sm mb-6">
+    <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4">
+        <div>
+            <p class="text-xs uppercase tracking-[0.25em] text-pink-400 font-bold">Publication Analytics</p>
+            <h2 class="text-2xl font-black mt-2">Indicadores de atención e impacto</h2>
+            <p class="text-slate-400 mt-2">Lectura operativa basada en comentarios, reacciones, participantes y seguimiento generado.</p>
+        </div>
+        <div class="text-left xl:text-right">
+            <p class="text-xs uppercase tracking-widest text-slate-500">Interacciones registradas</p>
+            <p class="text-4xl font-black mt-1"><?= esc($kpis['total_interactions'] ?? 0) ?></p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mt-7">
+        <?php foreach ([
+            'Tasa de respuesta' => ($kpis['response_rate'] ?? 0) . '%',
+            'Atención pendiente' => ($kpis['pending_rate'] ?? 0) . '%',
+            'Conversión a trabajo' => ($kpis['work_item_conversion_rate'] ?? 0) . '%',
+            'Conversión a caso' => ($kpis['case_conversion_rate'] ?? 0) . '%',
+            'Concentración principal' => ($kpis['top_participant_share'] ?? 0) . '%',
+        ] as $label => $value): ?>
+            <div class="rounded-xl bg-slate-900 border border-slate-800 p-4">
+                <p class="text-xs uppercase tracking-wider text-slate-500"><?= esc($label) ?></p>
+                <p class="text-2xl font-black mt-2"><?= esc($value) ?></p>
+            </div>
+        <?php endforeach; ?>
+    </div>
+</section>
+
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+    <section class="xl:col-span-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <h2 class="text-xl font-black text-slate-900">Actividad cronológica</h2>
+        <p class="text-sm text-slate-500 mt-1">Volumen diario de comentarios y reacciones capturadas.</p>
+
+        <div class="mt-6 space-y-4">
+            <?php foreach ($activity as $day): ?>
+                <?php $width = max(4, ((int) $day['total'] / $maxActivity) * 100); ?>
+                <div>
+                    <div class="flex items-center justify-between gap-4 text-sm">
+                        <span class="font-bold text-slate-700"><?= esc($day['date']) ?></span>
+                        <span class="text-slate-500"><?= esc($day['comments']) ?> comentarios · <?= esc($day['reactions']) ?> reacciones</span>
+                    </div>
+                    <div class="h-3 rounded-full bg-slate-100 overflow-hidden mt-2">
+                        <div class="h-full rounded-full bg-pink-600" style="width: <?= esc((string) $width) ?>%"></div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+
+            <?php if (empty($activity)): ?>
+                <p class="text-slate-500">Todavía no existe suficiente actividad para construir la serie temporal.</p>
+            <?php endif; ?>
+        </div>
+    </section>
+
+    <div class="space-y-6">
+        <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <h2 class="text-xl font-black text-slate-900">Estado de comentarios</h2>
+            <div class="mt-5 space-y-3">
+                <?php foreach (($analytics['status_breakdown'] ?? []) as $status => $total): ?>
+                    <div class="flex items-center justify-between rounded-xl bg-slate-50 border border-slate-200 px-4 py-3">
+                        <span class="font-bold text-slate-700"><?= esc($status) ?></span>
+                        <span class="font-black text-slate-900"><?= esc($total) ?></span>
+                    </div>
+                <?php endforeach; ?>
+                <?php if (empty($analytics['status_breakdown'])): ?><p class="text-slate-500">Sin estados disponibles.</p><?php endif; ?>
+            </div>
+        </section>
+
+        <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <h2 class="text-xl font-black text-slate-900">Prioridad operativa</h2>
+            <div class="mt-5 space-y-3">
+                <?php foreach (($analytics['priority_breakdown'] ?? []) as $priority => $total): ?>
+                    <div class="flex items-center justify-between rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+                        <span class="font-bold text-amber-800"><?= esc($priority) ?></span>
+                        <span class="font-black text-amber-950"><?= esc($total) ?></span>
+                    </div>
+                <?php endforeach; ?>
+                <?php if (empty($analytics['priority_breakdown'])): ?><p class="text-slate-500">Todavía no existen Work Items priorizados.</p><?php endif; ?>
+            </div>
+        </section>
+    </div>
+</div>
 
 <div class="grid grid-cols-1 2xl:grid-cols-3 gap-6">
     <div class="2xl:col-span-2 space-y-6">
