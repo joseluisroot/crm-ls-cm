@@ -2,13 +2,17 @@
 /** @var array $comment */
 $depth = (int) ($comment['depth'] ?? 0);
 $margin = min($depth, 5) * 20;
+$isPageActor = ! empty($comment['is_page_actor']);
 ?>
 
-<article class="rounded-2xl border <?= $comment['is_orphan'] ? 'border-amber-300 bg-amber-50/40' : 'border-slate-200 bg-white' ?> p-5 shadow-sm" style="margin-left: <?= $margin ?>px">
+<article class="rounded-2xl border <?= $comment['is_orphan'] ? 'border-amber-300 bg-amber-50/40' : ($isPageActor ? 'border-blue-300 bg-blue-50/40' : 'border-slate-200 bg-white') ?> p-5 shadow-sm" style="margin-left: <?= $margin ?>px">
     <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
         <div>
             <div class="flex flex-wrap items-center gap-2">
-                <?php if (! empty($comment['citizen_id'])): ?>
+                <?php if ($isPageActor): ?>
+                    <p class="font-black text-blue-900"><?= esc($comment['author_name'] ?: 'Fan Page') ?></p>
+                    <span class="px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-[11px] font-bold">Actor institucional · Fan Page</span>
+                <?php elseif (! empty($comment['citizen_id'])): ?>
                     <a href="<?= site_url('admin/citizens/' . $comment['citizen_id']) ?>" class="font-black text-pink-700 hover:text-pink-900">
                         <?= esc($comment['citizen_name'] ?: $comment['author_name'] ?: 'Ciudadano') ?>
                     </a>
@@ -41,7 +45,8 @@ $margin = min($depth, 5) * 20;
     <div class="mt-4 flex flex-wrap gap-4 text-xs text-slate-500">
         <span><?= esc($comment['reply_count']) ?> respuestas directas</span>
         <span><?= esc($comment['descendant_count']) ?> respuestas totales</span>
-        <?php if (! empty($comment['identity_actor_type'])): ?><span><?= esc($comment['identity_actor_type']) ?> · <?= esc($comment['identity_confidence']) ?>%</span><?php endif; ?>
+        <?php if ($isPageActor): ?><span>Evidencia: external_id = page_id</span><?php endif; ?>
+        <?php if (! $isPageActor && ! empty($comment['identity_actor_type'])): ?><span><?= esc($comment['identity_actor_type']) ?> · <?= esc($comment['identity_confidence']) ?>%</span><?php endif; ?>
         <span>ID: <?= esc($comment['external_comment_id'] ?? $comment['id']) ?></span>
     </div>
 
