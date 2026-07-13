@@ -50,11 +50,20 @@ Objetivo de negocio: convertir interacciones relevantes en trabajo operativo org
 - relación visible con ciudadano y caso cuando existe;
 - acceso desde la Unified Operations Queue.
 
+## v1.2 Citizen Domain — en progreso
+
+### Citizen Identity Foundation
+- tabla `citizen_social_identities` con unicidad por canal y external ID;
+- Value Objects `IdentityChannel`, `ActorType` e `IdentityConfidence`;
+- entidad `SocialIdentity`;
+- repositorio de identidades desacoplado;
+- DTO `IdentityRequest`;
+- servicio `CitizenResolverService`;
+- creación y resolución exacta de identidad;
+- eventos `citizen.identity.created` y `citizen.identity.resolved`;
+- pruebas unitarias de entidad y Value Objects.
+
 ### Próximo incremento
-- creación automática del Work Item durante la ingestión;
-- SLA y alertas de vencimiento;
-- respuesta real a comentarios;
-- vinculación de identidad social;
-- conversión a caso;
-- Citizen Card;
-- timeline ciudadano.
+- integrar el resolver con el adaptador de comentarios de Facebook;
+- poblar automáticamente `work_items.citizen_id`;
+- construir Citizen Timeline y Citizen Card.
