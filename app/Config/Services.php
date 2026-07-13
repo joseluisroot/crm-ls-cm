@@ -14,6 +14,8 @@ use Modules\Core\Event\Services\EventDispatcher;
 use Modules\Core\Event\Services\EventEngine;
 use Modules\Core\Event\Services\EventRegistry;
 use Modules\Integration\Application\IntegrationEventCaptureService;
+use Modules\Integration\Application\IntegrationEventReplayService;
+use Modules\Integration\Application\MetaIntegrationEventProcessor;
 use Modules\Integration\Infrastructure\DatabaseIntegrationEventRepository;
 use Modules\Operations\Application\CitizenOperationsService;
 use Modules\Operations\Application\FacebookCommentWorkItemAdapter;
@@ -46,6 +48,22 @@ class Services extends BaseService
     {
         if ($getShared) return static::getSharedInstance('integrationEventCapture');
         return new IntegrationEventCaptureService(static::integrationEventRepository());
+    }
+
+    public static function metaIntegrationEventProcessor(bool $getShared = true): MetaIntegrationEventProcessor
+    {
+        if ($getShared) return static::getSharedInstance('metaIntegrationEventProcessor');
+        return new MetaIntegrationEventProcessor();
+    }
+
+    public static function integrationEventReplay(bool $getShared = true): IntegrationEventReplayService
+    {
+        if ($getShared) return static::getSharedInstance('integrationEventReplay');
+        return new IntegrationEventReplayService(
+            static::integrationEventRepository(),
+            static::integrationEventCapture(),
+            static::metaIntegrationEventProcessor(),
+        );
     }
 
     public static function eventRegistry(bool $getShared = true): EventRegistry
