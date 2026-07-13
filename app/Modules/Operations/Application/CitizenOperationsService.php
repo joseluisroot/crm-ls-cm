@@ -20,6 +20,10 @@ final class CitizenOperationsService
     {
         $existing = $this->repository->findByOrigin($data->originType, $data->originId);
         if ($existing) {
+            if ($data->citizenId !== null && empty($existing['citizen_id'])) {
+                return $this->linkCitizen((int) $existing['id'], $data->citizenId);
+            }
+
             return $existing;
         }
 
@@ -51,6 +55,18 @@ final class CitizenOperationsService
         ]);
 
         return $created;
+    }
+
+    public function linkCitizen(int $workItemId, int $citizenId): array
+    {
+        $this->repository->updateState($workItemId, ['citizen_id' => $citizenId]);
+
+        $this->publisher->changed($workItemId, 'citizen_linked', [
+            'work_item_id' => $workItemId,
+            'citizen_id' => $citizenId,
+        ]);
+
+        return $this->repository->find($workItemId) ?? [];
     }
 
     public function assign(int $workItemId, int $userId): array
