@@ -62,7 +62,12 @@ final class ResolvePublicationParticipantsService
         $candidates = [];
 
         foreach ($participants as $participant) {
-            if (! empty($participant['citizen_id']) || ! empty($participant['identity_resolved'])) {
+            if (
+                ! empty($participant['citizen_id'])
+                || ! empty($participant['identity_resolved'])
+                || ! empty($participant['is_page_actor'])
+                || (($participant['actor_scope'] ?? null) === 'INSTITUTION')
+            ) {
                 continue;
             }
 
