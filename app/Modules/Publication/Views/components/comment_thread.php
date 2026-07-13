@@ -8,7 +8,16 @@ $margin = min($depth, 5) * 20;
     <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
         <div>
             <div class="flex flex-wrap items-center gap-2">
-                <p class="font-black text-slate-800"><?= esc($comment['author_name'] ?: 'Usuario de Facebook') ?></p>
+                <?php if (! empty($comment['citizen_id'])): ?>
+                    <a href="<?= site_url('admin/citizens/' . $comment['citizen_id']) ?>" class="font-black text-pink-700 hover:text-pink-900">
+                        <?= esc($comment['citizen_name'] ?: $comment['author_name'] ?: 'Ciudadano') ?>
+                    </a>
+                    <span class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold">Identidad resuelta</span>
+                <?php else: ?>
+                    <p class="font-black text-slate-800"><?= esc($comment['author_name'] ?: 'Usuario de Facebook') ?></p>
+                    <span class="px-2 py-1 rounded-full bg-slate-100 text-slate-500 text-[11px] font-bold">Sin vincular</span>
+                <?php endif; ?>
+
                 <?php if ($depth > 0): ?>
                     <span class="px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-[11px] font-bold">Respuesta nivel <?= esc($depth) ?></span>
                 <?php endif; ?>
@@ -32,6 +41,7 @@ $margin = min($depth, 5) * 20;
     <div class="mt-4 flex flex-wrap gap-4 text-xs text-slate-500">
         <span><?= esc($comment['reply_count']) ?> respuestas directas</span>
         <span><?= esc($comment['descendant_count']) ?> respuestas totales</span>
+        <?php if (! empty($comment['identity_actor_type'])): ?><span><?= esc($comment['identity_actor_type']) ?> · <?= esc($comment['identity_confidence']) ?>%</span><?php endif; ?>
         <span>ID: <?= esc($comment['external_comment_id'] ?? $comment['id']) ?></span>
     </div>
 

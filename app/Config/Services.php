@@ -21,6 +21,7 @@ use Modules\Operations\Infrastructure\Publishers\WorkItemEventPublisher;
 use Modules\Operations\Infrastructure\Repositories\DatabaseWorkItemRepository;
 use Modules\Publication\Application\CommentThreadService;
 use Modules\Publication\Application\PublicationAnalyticsService;
+use Modules\Publication\Application\PublicationCitizenIdentityService;
 use Modules\Publication\Application\PublicationProfileQueryService;
 use Modules\Workflow\Repositories\WorkflowRepository;
 use Modules\Workflow\Services\InstrumentedWorkflowRuntimeService;
@@ -163,5 +164,11 @@ class Services extends BaseService
     {
         if ($getShared) return static::getSharedInstance('commentThreads');
         return new CommentThreadService();
+    }
+
+    public static function publicationCitizenIdentity(bool $getShared = true): PublicationCitizenIdentityService
+    {
+        if ($getShared) return static::getSharedInstance('publicationCitizenIdentity');
+        return new PublicationCitizenIdentityService(db_connect());
     }
 }
