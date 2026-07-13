@@ -84,7 +84,11 @@ class Services extends BaseService
     public static function facebookCommentWorkItemAdapter(bool $getShared = true): FacebookCommentWorkItemAdapter
     {
         if ($getShared) return static::getSharedInstance('facebookCommentWorkItemAdapter');
-        return new FacebookCommentWorkItemAdapter(static::citizenOperations(), db_connect());
+        return new FacebookCommentWorkItemAdapter(
+            static::citizenOperations(),
+            static::citizenResolver(),
+            db_connect(),
+        );
     }
 
     public static function operationsQueueQuery(bool $getShared = true): OperationsQueueQueryService

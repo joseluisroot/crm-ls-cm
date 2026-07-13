@@ -63,7 +63,15 @@ Objetivo de negocio: convertir interacciones relevantes en trabajo operativo org
 - eventos `citizen.identity.created` y `citizen.identity.resolved`;
 - pruebas unitarias de entidad y Value Objects.
 
+### Identity to Operations Integration
+- el adaptador de comentarios resuelve al autor antes de crear trabajo;
+- crea un Citizen y su identidad cuando no existen;
+- crea Work Items con `citizen_id` desde el primer momento;
+- enlaza idempotentemente Work Items existentes que aún no tenían ciudadano;
+- conserva metadata del origen en identidad y Work Item;
+- publica `operations.work_item.citizen_linked`.
+
 ### Próximo incremento
-- integrar el resolver con el adaptador de comentarios de Facebook;
-- poblar automáticamente `work_items.citizen_id`;
-- construir Citizen Timeline y Citizen Card.
+- construir Citizen Timeline;
+- incorporar Citizen Card en Operations;
+- preparar el puente Citizen → Case.

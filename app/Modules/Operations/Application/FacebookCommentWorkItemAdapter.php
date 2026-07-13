@@ -3,11 +3,15 @@
 namespace Modules\Operations\Application;
 
 use CodeIgniter\Database\BaseConnection;
+use Modules\Citizen\Application\CitizenResolverService;
+use Modules\Citizen\Application\IdentityRequest;
+use Modules\Citizen\Domain\ValueObjects\IdentityChannel;
 
 final class FacebookCommentWorkItemAdapter
 {
     public function __construct(
         private readonly CitizenOperationsService $operations,
+        private readonly CitizenResolverService $citizenResolver,
         private readonly ?BaseConnection $db = null,
     ) {
     }
@@ -25,18 +29,35 @@ final class FacebookCommentWorkItemAdapter
             return null;
         }
 
+        $authorExternalId = trim((string) ($comment['author_external_id'] ?? ''));
+        if ($authorExternalId === '') {
+            return null;
+        }
+
+        $citizen = $this->citizenResolver->resolve(new IdentityRequest(
+            channel: new IdentityChannel(IdentityChannel::FACEBOOK),
+            externalId: $authorExternalId,
+            displayName: $comment['author_name'] ?: null,
+            metadata: [
+                'source' => 'facebook_comment',
+                'social_comment_id' => (int) $comment['id'],
+                'external_comment_id' => (string) $comment['external_comment_id'],
+            ],
+        ));
+
         return $this->operations->create(new CreateWorkItemData(
             originType: 'FACEBOOK_COMMENT',
             originId: (string) $comment['external_comment_id'],
             channel: 'FACEBOOK',
             title: 'Comentario de ' . ($comment['author_name'] ?: 'Usuario de Facebook'),
             summary: (string) ($comment['message'] ?: 'Comentario sin texto disponible.'),
+            citizenId: (int) $citizen['id'],
             priority: strtoupper((string) ($comment['priority'] ?: 'NORMAL')),
             metadata: [
                 'social_comment_id' => (int) $comment['id'],
                 'social_post_id' => (int) $comment['social_post_id'],
                 'external_post_id' => $comment['external_post_id'],
-                'author_external_id' => $comment['author_external_id'],
+                'author_external_id' => $authorExternalId,
                 'author_name' => $comment['author_name'],
                 'post_message' => $comment['post_message'],
                 'permalink_url' => $comment['permalink_url'],
