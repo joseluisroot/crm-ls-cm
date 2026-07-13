@@ -14,6 +14,7 @@ use Modules\Core\Event\Services\EventDispatcher;
 use Modules\Core\Event\Services\EventEngine;
 use Modules\Core\Event\Services\EventRegistry;
 use Modules\Integration\Application\IntegrationEventCaptureService;
+use Modules\Integration\Application\IntegrationEventQueryService;
 use Modules\Integration\Application\IntegrationEventReplayService;
 use Modules\Integration\Application\MetaIntegrationEventProcessor;
 use Modules\Integration\Infrastructure\DatabaseIntegrationEventRepository;
@@ -48,6 +49,12 @@ class Services extends BaseService
     {
         if ($getShared) return static::getSharedInstance('integrationEventCapture');
         return new IntegrationEventCaptureService(static::integrationEventRepository());
+    }
+
+    public static function integrationEventQuery(bool $getShared = true): IntegrationEventQueryService
+    {
+        if ($getShared) return static::getSharedInstance('integrationEventQuery');
+        return new IntegrationEventQueryService(db_connect());
     }
 
     public static function metaIntegrationEventProcessor(bool $getShared = true): MetaIntegrationEventProcessor
