@@ -101,10 +101,17 @@
 - distribución de prioridades operativas
 - visualización integrada en el perfil de publicación
 
+### Comment Threads e identidad
+- árbol de comentarios raíz y respuestas
+- soporte de comentarios huérfanos
+- métricas de profundidad y conversación
+- resolución exacta participante → Citizen Identity
+- navegación a perfiles ciudadanos desde comentarios y participantes
+- acción POST controlada para crear identidades pendientes
+- ejecución idempotente y resultado visible al operador
+
 ### Siguientes incrementos
-- Conversation Threads
-- Citizen Card en participantes y comentarios
-- clasificación avanzada de actores
+- clasificación especial de actores de la propia Fan Page
 - comportamiento de comentarios ocultos en Meta
 - merge y revisión manual de identidades
 - enlace y sincronización de contenido
