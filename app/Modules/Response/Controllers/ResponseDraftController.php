@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Response\Controllers;
 
 use App\Controllers\BaseController;
+use Modules\Response\Application\ResponseDraftService;
 use Throwable;
 
 final class ResponseDraftController extends BaseController
@@ -12,7 +13,7 @@ final class ResponseDraftController extends BaseController
     public function save(int $workItemId)
     {
         try {
-            service('responseDrafts')->save(
+            (new ResponseDraftService(db_connect()))->save(
                 workItemId: $workItemId,
                 userId: session()->get('admin_user_id') ? (int) session()->get('admin_user_id') : null,
                 channel: (string) $this->request->getPost('channel'),
