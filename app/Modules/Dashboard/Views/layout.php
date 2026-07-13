@@ -66,6 +66,10 @@ $navClass = static function (string $path, bool $prefix = false) use ($currentPa
                     📥 Unified Operations Queue
                 </a>
 
+                <a href="<?= site_url('admin/publications') ?>" class="<?= $navClass('admin/publications', true) ?>">
+                    📢 Publication Center
+                </a>
+
                 <a href="<?= site_url('admin/engagement') ?>" class="<?= $navClass('admin/engagement') ?>">
                     🌍 Public Engagement
                 </a>
@@ -111,7 +115,7 @@ $navClass = static function (string $path, bool $prefix = false) use ($currentPa
 
                 <div class="mt-6 text-center">
                     <p class="text-xs text-slate-500">CIAC Platform</p>
-                    <p class="text-xs text-slate-600 mt-1">Version 1.1 Citizen Operations</p>
+                    <p class="text-xs text-slate-600 mt-1">Version 1.2 Citizen & Publication</p>
                 </div>
             </div>
         </div>

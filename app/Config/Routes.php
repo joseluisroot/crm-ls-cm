@@ -43,6 +43,8 @@ $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
     $routes->get('analytics/data', '\Modules\Analytics\Controllers\AnalyticsController::data');
     $routes->get('engagement', '\Modules\Engagement\Controllers\EngagementCenterController::index');
     $routes->get('engagement/participants', '\Modules\Engagement\Controllers\EngagementCenterController::participants');
+    $routes->get('publications', '\Modules\Publication\Controllers\PublicationsController::index');
+    $routes->get('publications/(:num)', '\Modules\Publication\Controllers\PublicationsController::show/$1');
 
     $routes->get('workflows/runtime', '\Modules\Workflow\Controllers\RuntimeInspectorController::index');
     $routes->get('workflows/runtime/(:num)', '\Modules\Workflow\Controllers\RuntimeInspectorController::show/$1');

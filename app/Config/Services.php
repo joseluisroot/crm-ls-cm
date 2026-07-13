@@ -20,6 +20,7 @@ use Modules\Operations\Application\OperationsDetailQueryService;
 use Modules\Operations\Application\OperationsQueueQueryService;
 use Modules\Operations\Infrastructure\Publishers\WorkItemEventPublisher;
 use Modules\Operations\Infrastructure\Repositories\DatabaseWorkItemRepository;
+use Modules\Publication\Application\PublicationProfileQueryService;
 use Modules\Workflow\Repositories\WorkflowRepository;
 use Modules\Workflow\Services\InstrumentedWorkflowRuntimeService;
 use Modules\Workflow\Services\RuntimeInspectorQueryService;
@@ -150,5 +151,11 @@ class Services extends BaseService
     {
         if ($getShared) return static::getSharedInstance('citizenCard');
         return new CitizenCardQueryService(static::citizenCardRepository());
+    }
+
+    public static function publicationProfile(bool $getShared = true): PublicationProfileQueryService
+    {
+        if ($getShared) return static::getSharedInstance('publicationProfile');
+        return new PublicationProfileQueryService(db_connect());
     }
 }
