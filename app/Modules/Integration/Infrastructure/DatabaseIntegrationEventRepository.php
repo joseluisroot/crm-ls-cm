@@ -19,6 +19,8 @@ final class DatabaseIntegrationEventRepository implements IntegrationEventReposi
     {
         $builder = $this->connection()->table('integration_events');
         $builder->insert([
+            'original_event_id' => $event->originalEventId,
+            'replay_attempt' => $event->replayAttempt,
             'uuid' => $event->uuid,
             'source' => strtoupper($event->source),
             'event_type' => strtoupper($event->eventType),
@@ -32,6 +34,7 @@ final class DatabaseIntegrationEventRepository implements IntegrationEventReposi
             'payload_json' => $event->payloadJson,
             'headers_json' => $event->headersJson,
             'received_at' => $event->receivedAt,
+            'replayed_at' => $event->originalEventId !== null ? $event->receivedAt : null,
             'created_at' => $event->receivedAt,
             'updated_at' => $event->receivedAt,
         ]);
@@ -42,6 +45,26 @@ final class DatabaseIntegrationEventRepository implements IntegrationEventReposi
         }
 
         return $id;
+    }
+
+    public function find(int $eventId): ?array
+    {
+        $row = $this->connection()->table('integration_events')->where('id', $eventId)->get()->getRowArray();
+        return $row ?: null;
+    }
+
+    public function nextReplayAttempt(int $originalEventId): int
+    {
+        $row = $this->connection()->table('integration_events')
+            ->selectMax('replay_attempt', 'max_attempt')
+            ->groupStart()
+                ->where('id', $originalEventId)
+                ->orWhere('original_event_id', $originalEventId)
+            ->groupEnd()
+            ->get()
+            ->getRowArray();
+
+        return ((int) ($row['max_attempt'] ?? 0)) + 1;
     }
 
     public function markProcessed(int $eventId, int $processingTimeMs, array $trace = []): void
