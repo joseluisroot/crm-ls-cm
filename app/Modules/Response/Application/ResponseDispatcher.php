@@ -41,7 +41,17 @@ final class ResponseDispatcher
 
         $this->drafts->save($workItemId, $userId, $channel, $body);
         $draft = $this->drafts->findForWorkItem($workItemId);
-        $responseId = $this->insertAttempt($workItemId, $draft['id'] ?? null, $userId, $channel, $recipient, $body, $item);
+        $draftId = isset($draft['id']) ? (int) $draft['id'] : null;
+
+        $responseId = $this->insertAttempt(
+            $workItemId,
+            $draftId,
+            $userId,
+            $channel,
+            $recipient,
+            $body,
+            $item,
+        );
 
         try {
             $result = $this->adapter($channel)->send($recipient, $body);
@@ -53,8 +63,8 @@ final class ResponseDispatcher
                 'sent_at' => $now,
                 'updated_at' => $now,
             ]);
-            if ($draft) {
-                $this->db->table('response_drafts')->where('id', $draft['id'])->update(['status' => 'SENT', 'updated_at' => $now]);
+            if ($draftId !== null) {
+                $this->db->table('response_drafts')->where('id', $draftId)->update(['status' => 'SENT', 'updated_at' => $now]);
             }
             if (empty($item['first_response_at'])) {
                 $this->operations->markResponded($workItemId);
