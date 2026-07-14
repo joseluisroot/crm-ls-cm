@@ -37,17 +37,35 @@
                 <div>
                     <p class="text-xs uppercase tracking-widest text-pink-600 font-black">Citizen Care Workspace</p>
                     <h2 class="text-2xl font-black text-slate-900 mt-2">Responder al ciudadano</h2>
-                    <p class="text-sm text-slate-500 mt-2">Redacta, guarda o envía desde CIAC. La atención solo se marcará respondida después de la confirmación de Meta.</p>
+                    <p class="text-sm text-slate-500 mt-2">La atención solo se marcará respondida después de la confirmación de Meta.</p>
                 </div>
                 <?php if ($responseDraft): ?><span class="px-3 py-2 rounded-full bg-amber-50 text-amber-700 text-xs font-black">Borrador guardado</span><?php endif; ?>
+            </div>
+
+            <div class="mt-6 rounded-2xl border <?= ($responseCapability['channel'] ?? null) === 'MESSENGER' ? 'border-blue-200 bg-blue-50' : 'border-green-200 bg-green-50' ?> p-5">
+                <?php if (($responseCapability['channel'] ?? null) === 'MESSENGER'): ?>
+                    <p class="font-black text-blue-900">Conversación privada por Messenger</p>
+                    <p class="text-sm text-blue-800 mt-2">Toda la atención continuará de forma privada. Usa <strong>/retomar</strong> o <strong>/ayuda-flujo</strong> cuando el ciudadano no complete o no comprenda el flujo.</p>
+                <?php elseif (($responseCapability['channel'] ?? null) === 'FACEBOOK'): ?>
+                    <p class="font-black text-green-900">Respuesta pública en Facebook</p>
+                    <p class="text-sm text-green-800 mt-2">Confirma públicamente que la interacción fue recibida. Cuando necesites datos personales, usa <strong>/contactar</strong> o <strong>/escribenos</strong> e invita al ciudadano a continuar por Messenger.</p>
+                <?php else: ?>
+                    <p class="font-black text-slate-800">Canal pendiente de resolución</p>
+                    <p class="text-sm text-slate-600 mt-2">Asigna un operador y valida el origen para habilitar la respuesta.</p>
+                <?php endif; ?>
             </div>
 
             <div class="mt-6">
                 <p class="text-xs uppercase tracking-widest text-slate-400 font-bold">Quick Actions</p>
                 <div class="flex flex-wrap gap-2 mt-3">
                     <?php foreach ($quickActions as $action): ?>
+                        <?php
+                            $intent = $action['intent'] ?? 'ANY';
+                            $intentLabel = $intent === 'PUBLIC' ? 'Pública' : ($intent === 'PRIVATE' ? 'Privada' : 'Flexible');
+                        ?>
                         <button type="button" class="quick-action px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:border-pink-300 hover:bg-pink-50 text-sm font-bold text-slate-700 transition" data-body="<?= esc($action['body'], 'attr') ?>">
                             <?= esc($action['command']) ?> · <?= esc($action['label']) ?>
+                            <span class="ml-1 text-[10px] uppercase tracking-wide text-slate-400"><?= esc($intentLabel) ?></span>
                         </button>
                     <?php endforeach; ?>
                 </div>
