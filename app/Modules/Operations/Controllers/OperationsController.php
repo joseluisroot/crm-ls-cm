@@ -39,7 +39,11 @@ final class OperationsController extends BaseController
         $citizenCard = ! empty($item['citizen_id']) ? service('citizenCard')->get((int) $item['citizen_id']) : null;
         $catalog = new QuickActionCatalog();
         $authorName = $item['source']['author_name'] ?? $item['title'] ?? null;
-        $quickActions = array_map(static fn (array $action): array => $catalog->personalize($action, $authorName), $catalog->all());
+        $channel = strtoupper((string) ($item['channel'] ?? ''));
+        $quickActions = array_map(
+            static fn (array $action): array => $catalog->personalize($action, $authorName),
+            $catalog->forChannel($channel),
+        );
         $db = db_connect();
 
         return view('Modules\Operations\Views\show', [
