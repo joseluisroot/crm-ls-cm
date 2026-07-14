@@ -32,7 +32,12 @@ final class ResponseContextResolver
                 ->where('external_comment_id', $item['origin_id'])
                 ->get()->getRowArray();
             if (! $comment) throw new RuntimeException('No se encontró el comentario original de Facebook.');
-            return ['item' => $item, 'channel' => 'FACEBOOK', 'recipient_external_id' => (string) $comment['external_comment_id']];
+            return [
+                'item' => $item,
+                'channel' => 'FACEBOOK',
+                'response_mode' => 'PUBLIC',
+                'recipient_external_id' => (string) $comment['external_comment_id'],
+            ];
         }
 
         if (in_array($originType, ['MESSENGER', 'MESSENGER_MESSAGE'], true)) {
@@ -48,7 +53,12 @@ final class ResponseContextResolver
             if (! $message || empty($message['facebook_id'])) {
                 throw new RuntimeException('No se encontró el destinatario Messenger de esta atención.');
             }
-            return ['item' => $item, 'channel' => 'MESSENGER', 'recipient_external_id' => (string) $message['facebook_id']];
+            return [
+                'item' => $item,
+                'channel' => 'MESSENGER',
+                'response_mode' => 'PRIVATE',
+                'recipient_external_id' => (string) $message['facebook_id'],
+            ];
         }
 
         throw new RuntimeException('El canal de esta atención todavía no admite respuestas desde CIAC.');
@@ -58,9 +68,14 @@ final class ResponseContextResolver
     {
         try {
             $context = $this->resolve($workItemId);
-            return ['ready' => true, 'channel' => $context['channel'], 'reason' => null];
+            return [
+                'ready' => true,
+                'channel' => $context['channel'],
+                'response_mode' => $context['response_mode'],
+                'reason' => null,
+            ];
         } catch (RuntimeException $e) {
-            return ['ready' => false, 'channel' => null, 'reason' => $e->getMessage()];
+            return ['ready' => false, 'channel' => null, 'response_mode' => null, 'reason' => $e->getMessage()];
         }
     }
 }
