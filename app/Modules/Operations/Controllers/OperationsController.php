@@ -5,6 +5,7 @@ namespace Modules\Operations\Controllers;
 use App\Controllers\BaseController;
 use CodeIgniter\Exceptions\PageNotFoundException;
 use Modules\Response\Application\QuickActionCatalog;
+use Modules\Response\Application\ResponseActionCatalog;
 use Modules\Response\Application\ResponseContextResolver;
 use Modules\Response\Application\ResponseDraftService;
 use Throwable;
@@ -41,6 +42,7 @@ final class OperationsController extends BaseController
         $authorName = $item['source']['author_name'] ?? $item['title'] ?? null;
         $quickActions = array_map(static fn (array $action): array => $catalog->personalize($action, $authorName), $catalog->all());
         $db = db_connect();
+        $responseCapability = (new ResponseContextResolver($db))->capability($id);
 
         return view('Modules\Operations\Views\show', [
             'title' => 'Atención #' . $id,
@@ -51,7 +53,8 @@ final class OperationsController extends BaseController
             'statuses' => $query->statuses(),
             'priorities' => $query->priorities(),
             'responseDraft' => (new ResponseDraftService($db))->findForWorkItem($id),
-            'responseCapability' => (new ResponseContextResolver($db))->capability($id),
+            'responseCapability' => $responseCapability,
+            'responseActions' => (new ResponseActionCatalog())->forAttention($item, $responseCapability),
             'responses' => $db->table('citizen_responses')->where('work_item_id', $id)->orderBy('id', 'DESC')->get()->getResultArray(),
             'quickActions' => $quickActions,
         ]);
