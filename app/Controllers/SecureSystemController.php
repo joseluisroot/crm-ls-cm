@@ -75,8 +75,6 @@ final class SecureSystemController extends SystemController
             explode(',', (string) env('SYSTEM_ALLOWED_IPS', ''))
         )));
 
-        var_dump($allowedIps, $this->request->getIPAddress());
-
         if ($allowedIps !== [] && ! in_array($this->request->getIPAddress(), $allowedIps, true)) {
             log_message('warning', 'IP no autorizada para acciones del sistema: {ip}', [
                 'ip' => $this->request->getIPAddress(),
