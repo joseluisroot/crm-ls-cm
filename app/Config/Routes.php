@@ -12,6 +12,7 @@ $routes->get('admin/logout', '\Modules\Auth\Controllers\AuthController::logout')
 
 $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
     $routes->get('/', '\Modules\Dashboard\Controllers\DashboardController::index');
+    $routes->get('my-work', '\Modules\Operations\Controllers\MyWorkController::index', ['filter' => 'permission:operations.view_own']);
 
     $routes->get('access/users', '\Modules\Authorization\Controllers\UserAccessController::index', ['filter' => 'permission:authorization.manage']);
     $routes->get('access/users/create', '\Modules\Authorization\Controllers\UserAccessController::create', ['filter' => 'permission:authorization.manage']);
