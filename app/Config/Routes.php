@@ -26,6 +26,10 @@ $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
     $routes->get('access/roles/(:num)', '\Modules\Authorization\Controllers\RoleAccessController::show/$1', ['filter' => 'permission:authorization.manage']);
     $routes->post('access/roles/(:num)/permissions', '\Modules\Authorization\Controllers\RoleAccessController::updatePermissions/$1', ['filter' => 'permission:authorization.manage']);
     $routes->post('access/roles/(:num)/status', '\Modules\Authorization\Controllers\RoleAccessController::updateStatus/$1', ['filter' => 'permission:authorization.manage']);
+    $routes->get('access/teams', '\Modules\Authorization\Controllers\TeamAccessController::index', ['filter' => 'permission:teams.manage']);
+    $routes->post('access/teams', '\Modules\Authorization\Controllers\TeamAccessController::store', ['filter' => 'permission:teams.manage']);
+    $routes->get('access/teams/(:num)', '\Modules\Authorization\Controllers\TeamAccessController::show/$1', ['filter' => 'permission:teams.manage']);
+    $routes->post('access/teams/(:num)', '\Modules\Authorization\Controllers\TeamAccessController::update/$1', ['filter' => 'permission:teams.manage']);
 
     $routes->get('operations', '\Modules\Operations\Controllers\OperationsController::index');
     $routes->post('operations/import-facebook-comments', '\Modules\Operations\Controllers\OperationsController::importPending');
