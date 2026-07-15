@@ -11,6 +11,8 @@ use Modules\Core\UI\Widgets\WidgetContext;
 use Modules\Core\UI\Widgets\WidgetRenderer;
 use Modules\Operations\Application\OperationalQueueCatalog;
 use Modules\Operations\Application\SlaClockService;
+use Modules\Operations\Application\WorkItemNotesService;
+use Modules\Operations\Presentation\Widgets\NotesWidget;
 use Modules\Operations\Presentation\Widgets\SlaWidget;
 use Modules\Operations\Presentation\Widgets\TimelineWidget;
 use Modules\Response\Application\QuickActionCatalog;
@@ -47,6 +49,7 @@ final class OperationsController extends BaseController
         $timelineWidget = new TimelineWidget();
         $slaWidget = new SlaWidget();
         $caseWidget = new CaseWidget();
+        $notesWidget = new NotesWidget();
         $catalog = new QuickActionCatalog();
         $authorName = $item['source']['author_name'] ?? $item['title'] ?? null;
         $channel = strtoupper((string) ($item['channel'] ?? ''));
@@ -59,12 +62,30 @@ final class OperationsController extends BaseController
             'timelineWidgetHtml' => $timelineWidget->supports($context) ? $renderer->render($timelineWidget->build($context)) : null,
             'slaWidgetHtml' => $slaWidget->supports($context) ? $renderer->render($slaWidget->build($context)) : null,
             'caseWidgetHtml' => $caseWidget->supports($context) ? $renderer->render($caseWidget->build($context)) : null,
+            'notesWidgetHtml' => $notesWidget->supports($context) ? $renderer->render($notesWidget->build($context)) : null,
             'users' => $this->assignableUsers($query), 'statuses' => $query->statuses(), 'priorities' => $query->priorities(),
             'responseDraft' => (new ResponseDraftService($db))->findForWorkItem($id),
             'responseCapability' => (new ResponseContextResolver($db))->capability($id),
             'responses' => $db->table('citizen_responses')->where('work_item_id', $id)->orderBy('id', 'DESC')->get()->getResultArray(),
             'quickActions' => $quickActions,
         ]);
+    }
+
+    public function addNote(int $id)
+    {
+        $this->requireAccess($id);
+        if (cannot('operations.update') && cannot('operations.reply')) throw PageNotFoundException::forPageNotFound('Acción no autorizada.');
+        $item = service('operationsDetailQuery')->find($id);
+        if (! $item) throw PageNotFoundException::forPageNotFound('Atención no encontrada.');
+        return $this->execute(function () use ($id, $item): void {
+            (new WorkItemNotesService())->add(
+                $id,
+                (int) ($item['case_id'] ?? 0) ?: null,
+                $this->currentUserId(),
+                (string) $this->request->getPost('note_type'),
+                (string) $this->request->getPost('body'),
+            );
+        }, 'Nota interna agregada.');
     }
 
     public function importPending() { $count = service('facebookCommentWorkItemAdapter')->importPending(500); return redirect()->to(site_url('admin/operations?queue=PENDING'))->with('success', $count . ' comentarios fueron sincronizados con Citizen Operations.'); }
