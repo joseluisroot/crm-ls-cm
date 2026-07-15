@@ -65,7 +65,7 @@
                 <div class="flex flex-col sm:flex-row gap-3 mt-5">
                     <button class="px-5 py-3 rounded-xl bg-slate-950 text-white font-black">Guardar borrador</button>
                     <?php if ($responseCapability['ready']): ?>
-                        <button formaction="<?= site_url('admin/operations/' . $item['id'] . '/response-send') ?>" onclick="return confirm('¿Enviar esta respuesta por <?= esc($responseCapability['channel']) ?>?');" class="px-5 py-3 rounded-xl bg-pink-600 text-white font-black">Enviar por <?= esc($responseCapability['channel']) ?></button>
+                        <button formaction="<?= site_url('admin/operations/' . $item['id'] . '/response-send') ?>" data-confirm="¿Enviar esta respuesta por <?= esc($responseCapability['channel'], 'attr') ?>?" data-loading="Enviando respuesta..." class="px-5 py-3 rounded-xl bg-pink-600 text-white font-black">Enviar por <?= esc($responseCapability['channel']) ?></button>
                     <?php else: ?>
                         <button type="button" disabled class="px-5 py-3 rounded-xl bg-pink-300 text-white font-black cursor-not-allowed">Enviar respuesta</button>
                     <?php endif; ?>
@@ -103,7 +103,7 @@
     </div>
 
     <aside class="space-y-6">
-        <?php if ($citizenCard): ?><?= view('Modules\Citizen\Presentation\Views\components\citizen_card', ['citizenCard' => $citizenCard]) ?><?php endif; ?>
+        <?php if (! empty($citizenWidgetHtml)): ?><?= $citizenWidgetHtml ?><?php endif; ?>
         <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
             <h2 class="text-xl font-black text-slate-900">Acciones operativas</h2>
             <form method="post" action="<?= site_url('admin/operations/' . $item['id'] . '/assign') ?>" class="mt-5 space-y-3"><?= csrf_field() ?><label class="text-sm font-bold text-slate-700">Responsable</label><select name="assigned_user_id" class="w-full rounded-xl border border-slate-300 px-4 py-3 bg-white" required><option value="">Seleccionar operador</option><?php foreach ($users as $user): ?><option value="<?= esc($user['id']) ?>" <?= (int) ($item['assigned_user_id'] ?? 0) === (int) $user['id'] ? 'selected' : '' ?>><?= esc($user['name']) ?></option><?php endforeach; ?></select><button class="w-full px-4 py-3 rounded-xl bg-slate-950 text-white font-bold">Asignar</button></form>
