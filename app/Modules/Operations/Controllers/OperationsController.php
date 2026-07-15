@@ -6,6 +6,9 @@ use App\Controllers\BaseController;
 use CodeIgniter\Exceptions\PageNotFoundException;
 use Modules\Authorization\Application\OwnershipService;
 use Modules\Authorization\Application\TeamScopeService;
+use Modules\Citizen\Presentation\Widgets\CitizenWidget;
+use Modules\Core\UI\Widgets\WidgetContext;
+use Modules\Core\UI\Widgets\WidgetRenderer;
 use Modules\Operations\Application\OperationalQueueCatalog;
 use Modules\Operations\Application\SlaClockService;
 use Modules\Response\Application\QuickActionCatalog;
@@ -51,7 +54,20 @@ final class OperationsController extends BaseController
         $item = $query->find($id);
         if (! $item) throw PageNotFoundException::forPageNotFound('Work Item no encontrado.');
 
-        $citizenCard = ! empty($item['citizen_id']) ? service('citizenCard')->get((int) $item['citizen_id']) : null;
+        $citizenWidgetHtml = null;
+        $citizenId = (int) ($item['citizen_id'] ?? 0);
+        if ($citizenId > 0) {
+            $context = new WidgetContext(
+                viewerUserId: $this->currentUserId(),
+                workItemId: $id,
+                citizenId: $citizenId,
+            );
+            $widget = new CitizenWidget();
+            if ($widget->supports($context)) {
+                $citizenWidgetHtml = (new WidgetRenderer())->render($widget->build($context));
+            }
+        }
+
         $catalog = new QuickActionCatalog();
         $authorName = $item['source']['author_name'] ?? $item['title'] ?? null;
         $channel = strtoupper((string) ($item['channel'] ?? ''));
@@ -59,9 +75,13 @@ final class OperationsController extends BaseController
         $db = db_connect();
 
         return view('Modules\Operations\Views\show', [
-            'title' => 'Atención #' . $id, 'item' => $item, 'citizenCard' => $citizenCard,
-            'timeline' => $query->timeline($id), 'users' => $this->assignableUsers($query),
-            'statuses' => $query->statuses(), 'priorities' => $query->priorities(),
+            'title' => 'Atención #' . $id,
+            'item' => $item,
+            'citizenWidgetHtml' => $citizenWidgetHtml,
+            'timeline' => $query->timeline($id),
+            'users' => $this->assignableUsers($query),
+            'statuses' => $query->statuses(),
+            'priorities' => $query->priorities(),
             'responseDraft' => (new ResponseDraftService($db))->findForWorkItem($id),
             'responseCapability' => (new ResponseContextResolver($db))->capability($id),
             'responses' => $db->table('citizen_responses')->where('work_item_id', $id)->orderBy('id', 'DESC')->get()->getResultArray(),
