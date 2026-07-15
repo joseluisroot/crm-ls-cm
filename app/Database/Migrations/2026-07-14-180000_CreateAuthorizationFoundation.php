@@ -53,9 +53,9 @@ final class CreateAuthorizationFoundation extends Migration
         $this->forge->createTable('role_permissions', true);
 
         $this->forge->addField([
-            'user_id' => ['type' => 'BIGINT', 'unsigned' => true],
+            'user_id' => ['type' => 'INT', 'unsigned' => true],
             'role_id' => ['type' => 'BIGINT', 'unsigned' => true],
-            'assigned_by' => ['type' => 'BIGINT', 'unsigned' => true, 'null' => true],
+            'assigned_by' => ['type' => 'INT', 'unsigned' => true, 'null' => true],
             'assigned_at' => ['type' => 'DATETIME', 'null' => true],
         ]);
         $this->forge->addKey(['user_id', 'role_id'], true);
