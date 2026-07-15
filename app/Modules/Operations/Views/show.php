@@ -48,6 +48,7 @@
 
         <?php if (! empty($responses)): ?><section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm"><h2 class="text-xl font-black text-slate-900">Historial de respuestas</h2><div class="mt-5 space-y-4"><?php foreach ($responses as $response): ?><div class="rounded-xl border border-slate-200 p-4"><div class="flex items-center justify-between gap-3"><strong><?= esc($response['channel']) ?></strong><span class="text-xs font-black <?= $response['status'] === 'SENT' ? 'text-green-600' : 'text-red-600' ?>"><?= esc($response['status']) ?></span></div><p class="text-sm text-slate-700 mt-3 whitespace-pre-line"><?= esc($response['body']) ?></p><p class="text-xs text-slate-400 mt-3">Meta ID: <?= esc($response['external_response_id'] ?? '-') ?> · <?= esc($response['sent_at'] ?? $response['created_at']) ?></p><?php if (! empty($response['error_message'])): ?><p class="text-xs text-red-600 mt-2"><?= esc($response['error_message']) ?></p><?php endif; ?></div><?php endforeach; ?></div></section><?php endif; ?>
 
+        <?php if (! empty($activityWidgetHtml)): ?><?= $activityWidgetHtml ?><?php endif; ?>
         <?php if (! empty($timelineWidgetHtml)): ?><?= $timelineWidgetHtml ?><?php endif; ?>
     </div>
 

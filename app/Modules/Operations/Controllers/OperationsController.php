@@ -11,6 +11,7 @@ use Modules\Core\UI\Widgets\WidgetContext;
 use Modules\Core\UI\Widgets\WidgetRenderer;
 use Modules\Operations\Application\OperationalQueueCatalog;
 use Modules\Operations\Application\SlaClockService;
+use Modules\Operations\Presentation\Widgets\ActivityWidget;
 use Modules\Operations\Presentation\Widgets\AssignmentWidget;
 use Modules\Operations\Presentation\Widgets\SlaWidget;
 use Modules\Operations\Presentation\Widgets\TimelineWidget;
@@ -49,6 +50,7 @@ final class OperationsController extends BaseController
         $slaWidget = new SlaWidget();
         $caseWidget = new CaseWidget();
         $assignmentWidget = new AssignmentWidget();
+        $activityWidget = new ActivityWidget();
         $catalog = new QuickActionCatalog();
         $authorName = $item['source']['author_name'] ?? $item['title'] ?? null;
         $channel = strtoupper((string) ($item['channel'] ?? ''));
@@ -62,6 +64,7 @@ final class OperationsController extends BaseController
             'slaWidgetHtml' => $slaWidget->supports($context) ? $renderer->render($slaWidget->build($context)) : null,
             'caseWidgetHtml' => $caseWidget->supports($context) ? $renderer->render($caseWidget->build($context)) : null,
             'assignmentWidgetHtml' => $assignmentWidget->supports($context) ? $renderer->render($assignmentWidget->build($context)) : null,
+            'activityWidgetHtml' => $activityWidget->supports($context) ? $renderer->render($activityWidget->build($context)) : null,
             'users' => $this->assignableUsers($query), 'statuses' => $query->statuses(), 'priorities' => $query->priorities(),
             'responseDraft' => (new ResponseDraftService($db))->findForWorkItem($id),
             'responseCapability' => (new ResponseContextResolver($db))->capability($id),
