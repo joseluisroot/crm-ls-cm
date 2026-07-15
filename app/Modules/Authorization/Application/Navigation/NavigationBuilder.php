@@ -61,6 +61,7 @@ final class NavigationBuilder
 
         $this->appendGroup($groups, 'Administración', [
             $this->item('🔐', 'Usuarios y accesos', 'admin/access/users', 'admin/access/users', true, $can('authorization.manage')),
+            $this->item('🛡️', 'Roles y permisos', 'admin/access/roles', 'admin/access/roles', true, $can('authorization.manage')),
         ]);
 
         return [

@@ -22,6 +22,10 @@ $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
     $routes->get('access/users/(:num)', '\Modules\Authorization\Controllers\UserAccessController::show/$1', ['filter' => 'permission:authorization.manage']);
     $routes->post('access/users/(:num)/status', '\Modules\Authorization\Controllers\UserAccessController::updateStatus/$1', ['filter' => 'permission:authorization.manage']);
     $routes->post('access/users/(:num)/roles', '\Modules\Authorization\Controllers\UserAccessController::syncRoles/$1', ['filter' => 'permission:authorization.manage']);
+    $routes->get('access/roles', '\Modules\Authorization\Controllers\RoleAccessController::index', ['filter' => 'permission:authorization.manage']);
+    $routes->get('access/roles/(:num)', '\Modules\Authorization\Controllers\RoleAccessController::show/$1', ['filter' => 'permission:authorization.manage']);
+    $routes->post('access/roles/(:num)/permissions', '\Modules\Authorization\Controllers\RoleAccessController::updatePermissions/$1', ['filter' => 'permission:authorization.manage']);
+    $routes->post('access/roles/(:num)/status', '\Modules\Authorization\Controllers\RoleAccessController::updateStatus/$1', ['filter' => 'permission:authorization.manage']);
 
     $routes->get('operations', '\Modules\Operations\Controllers\OperationsController::index');
     $routes->post('operations/import-facebook-comments', '\Modules\Operations\Controllers\OperationsController::importPending');
