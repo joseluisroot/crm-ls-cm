@@ -43,11 +43,23 @@ final class MyWorkQueryService
 
         $openCases = 0;
         if ($db->tableExists('cases') && $db->tableExists('case_statuses')) {
-            $openCases = (int) $db->table('cases c')
-                ->join('case_statuses cs', 'cs.id = c.status_id')
-                ->where('c.assigned_to', $userId)
-                ->whereNotIn('UPPER(cs.code)', ['CLOSED','RESOLVED','CANCELLED'], false)
-                ->countAllResults();
+            $terminalStatusIds = array_map('intval', array_column(
+                $db->table('case_statuses')
+                    ->select('id')
+                    ->whereIn('name', ['Cerrado', 'Resuelto', 'Cancelado', 'Closed', 'Resolved', 'Cancelled'])
+                    ->get()
+                    ->getResultArray(),
+                'id'
+            ));
+
+            $caseBuilder = $db->table('cases')
+                ->where('assigned_to', $userId);
+
+            if ($terminalStatusIds !== []) {
+                $caseBuilder->whereNotIn('status_id', $terminalStatusIds);
+            }
+
+            $openCases = (int) $caseBuilder->countAllResults();
         }
 
         $priority = $db->table('work_items wi')
