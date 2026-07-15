@@ -4,6 +4,7 @@ namespace Modules\Auth\Controllers;
 
 use App\Controllers\BaseController;
 use Modules\Auth\Models\AdminUserModel;
+use Modules\Authorization\Application\AuthorizationService;
 
 class AuthController extends BaseController
 {
@@ -28,7 +29,7 @@ class AuthController extends BaseController
             ->where('status', 'active')
             ->first();
 
-        if (!$user || !password_verify($password, $user['password'])) {
+        if (! $user || ! password_verify($password, $user['password'])) {
             return redirect()
                 ->back()
                 ->withInput()
@@ -45,6 +46,8 @@ class AuthController extends BaseController
             'admin_user_role' => $user['role'],
         ]);
 
+        (new AuthorizationService())->warmSession((int) $user['id']);
+
         (new AdminUserModel())->update($user['id'], [
             'last_login_at' => date('Y-m-d H:i:s'),
         ]);
@@ -54,6 +57,8 @@ class AuthController extends BaseController
 
     public function logout()
     {
+        (new AuthorizationService())->clearSessionCache();
+
         session()->remove([
             'admin_logged_in',
             'admin_user_id',
