@@ -25,81 +25,30 @@
                 <div class="mt-6 rounded-xl bg-slate-50 border border-slate-200 p-5">
                     <p class="text-xs uppercase tracking-widest text-slate-400 font-bold">Contexto</p>
                     <p class="text-sm text-slate-600 mt-2"><?= esc($item['source']['post_message'] ?? $item['source']['external_message_id'] ?? $item['origin_id']) ?></p>
-                    <?php if (! empty($item['source']['permalink_url'])): ?>
-                        <a href="<?= esc($item['source']['permalink_url']) ?>" target="_blank" rel="noopener" class="inline-flex mt-3 text-sm font-bold text-pink-600">Ver en Facebook ↗</a>
-                    <?php endif; ?>
+                    <?php if (! empty($item['source']['permalink_url'])): ?><a href="<?= esc($item['source']['permalink_url']) ?>" target="_blank" rel="noopener" class="inline-flex mt-3 text-sm font-bold text-pink-600">Ver en Facebook ↗</a><?php endif; ?>
                 </div>
             <?php endif; ?>
         </section>
 
         <section class="bg-white border border-pink-200 rounded-2xl p-6 shadow-sm shadow-pink-100/50">
             <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                <div>
-                    <p class="text-xs uppercase tracking-widest text-pink-600 font-black">Citizen Care Workspace</p>
-                    <h2 class="text-2xl font-black text-slate-900 mt-2">Responder al ciudadano</h2>
-                    <p class="text-sm text-slate-500 mt-2">Redacta, guarda o envía desde CIAC. La atención solo se marcará respondida después de la confirmación de Meta.</p>
-                </div>
+                <div><p class="text-xs uppercase tracking-widest text-pink-600 font-black">Citizen Care Workspace</p><h2 class="text-2xl font-black text-slate-900 mt-2">Responder al ciudadano</h2><p class="text-sm text-slate-500 mt-2">Redacta, guarda o envía desde CIAC. La atención solo se marcará respondida después de la confirmación de Meta.</p></div>
                 <?php if ($responseDraft): ?><span class="px-3 py-2 rounded-full bg-amber-50 text-amber-700 text-xs font-black">Borrador guardado</span><?php endif; ?>
             </div>
-
-            <div class="mt-6">
-                <p class="text-xs uppercase tracking-widest text-slate-400 font-bold">Quick Actions</p>
-                <div class="flex flex-wrap gap-2 mt-3">
-                    <?php foreach ($quickActions as $action): ?>
-                        <button type="button" class="quick-action px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:border-pink-300 hover:bg-pink-50 text-sm font-bold text-slate-700 transition" data-body="<?= esc($action['body'], 'attr') ?>">
-                            <?= esc($action['command']) ?> · <?= esc($action['label']) ?>
-                        </button>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-
+            <div class="mt-6"><p class="text-xs uppercase tracking-widest text-slate-400 font-bold">Quick Actions</p><div class="flex flex-wrap gap-2 mt-3"><?php foreach ($quickActions as $action): ?><button type="button" class="quick-action px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:border-pink-300 hover:bg-pink-50 text-sm font-bold text-slate-700 transition" data-body="<?= esc($action['body'], 'attr') ?>"><?= esc($action['command']) ?> · <?= esc($action['label']) ?></button><?php endforeach; ?></div></div>
             <form method="post" action="<?= site_url('admin/operations/' . $item['id'] . '/response-draft') ?>" class="mt-6" id="response-form">
-                <?= csrf_field() ?>
-                <input type="hidden" name="channel" value="<?= esc($item['channel'], 'attr') ?>">
+                <?= csrf_field() ?><input type="hidden" name="channel" value="<?= esc($item['channel'], 'attr') ?>">
                 <label for="response-body" class="text-sm font-black text-slate-700">Respuesta</label>
                 <textarea id="response-body" name="body" rows="8" maxlength="5000" required class="mt-3 w-full rounded-2xl border border-slate-300 px-5 py-4 focus:border-pink-500 focus:ring-pink-500" placeholder="Escribe / para usar acciones rápidas o redacta la respuesta..."><?= esc($responseDraft['body'] ?? '') ?></textarea>
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-3">
-                    <p class="text-xs text-slate-400"><span id="response-count">0</span>/5000 caracteres</p>
-                    <p class="text-xs text-slate-400">Último guardado: <?= esc($responseDraft['updated_at'] ?? 'Sin guardar') ?></p>
-                </div>
-                <div class="flex flex-col sm:flex-row gap-3 mt-5">
-                    <button class="px-5 py-3 rounded-xl bg-slate-950 text-white font-black">Guardar borrador</button>
-                    <?php if ($responseCapability['ready']): ?>
-                        <button formaction="<?= site_url('admin/operations/' . $item['id'] . '/response-send') ?>" data-confirm="¿Enviar esta respuesta por <?= esc($responseCapability['channel'], 'attr') ?>?" data-loading="Enviando respuesta..." class="px-5 py-3 rounded-xl bg-pink-600 text-white font-black">Enviar por <?= esc($responseCapability['channel']) ?></button>
-                    <?php else: ?>
-                        <button type="button" disabled class="px-5 py-3 rounded-xl bg-pink-300 text-white font-black cursor-not-allowed">Enviar respuesta</button>
-                    <?php endif; ?>
-                </div>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-3"><p class="text-xs text-slate-400"><span id="response-count">0</span>/5000 caracteres</p><p class="text-xs text-slate-400">Último guardado: <?= esc($responseDraft['updated_at'] ?? 'Sin guardar') ?></p></div>
+                <div class="flex flex-col sm:flex-row gap-3 mt-5"><button class="px-5 py-3 rounded-xl bg-slate-950 text-white font-black">Guardar borrador</button><?php if ($responseCapability['ready']): ?><button formaction="<?= site_url('admin/operations/' . $item['id'] . '/response-send') ?>" data-confirm="¿Enviar esta respuesta por <?= esc($responseCapability['channel'], 'attr') ?>?" data-loading="Enviando respuesta..." class="px-5 py-3 rounded-xl bg-pink-600 text-white font-black">Enviar por <?= esc($responseCapability['channel']) ?></button><?php else: ?><button type="button" disabled class="px-5 py-3 rounded-xl bg-pink-300 text-white font-black cursor-not-allowed">Enviar respuesta</button><?php endif; ?></div>
                 <?php if (! $responseCapability['ready']): ?><p class="text-xs text-amber-700 mt-3"><?= esc($responseCapability['reason']) ?></p><?php endif; ?>
             </form>
         </section>
 
-        <?php if (! empty($responses)): ?>
-            <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                <h2 class="text-xl font-black text-slate-900">Historial de respuestas</h2>
-                <div class="mt-5 space-y-4">
-                    <?php foreach ($responses as $response): ?>
-                        <div class="rounded-xl border border-slate-200 p-4">
-                            <div class="flex items-center justify-between gap-3"><strong><?= esc($response['channel']) ?></strong><span class="text-xs font-black <?= $response['status'] === 'SENT' ? 'text-green-600' : 'text-red-600' ?>"><?= esc($response['status']) ?></span></div>
-                            <p class="text-sm text-slate-700 mt-3 whitespace-pre-line"><?= esc($response['body']) ?></p>
-                            <p class="text-xs text-slate-400 mt-3">Meta ID: <?= esc($response['external_response_id'] ?? '-') ?> · <?= esc($response['sent_at'] ?? $response['created_at']) ?></p>
-                            <?php if (! empty($response['error_message'])): ?><p class="text-xs text-red-600 mt-2"><?= esc($response['error_message']) ?></p><?php endif; ?>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            </section>
-        <?php endif; ?>
+        <?php if (! empty($responses)): ?><section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm"><h2 class="text-xl font-black text-slate-900">Historial de respuestas</h2><div class="mt-5 space-y-4"><?php foreach ($responses as $response): ?><div class="rounded-xl border border-slate-200 p-4"><div class="flex items-center justify-between gap-3"><strong><?= esc($response['channel']) ?></strong><span class="text-xs font-black <?= $response['status'] === 'SENT' ? 'text-green-600' : 'text-red-600' ?>"><?= esc($response['status']) ?></span></div><p class="text-sm text-slate-700 mt-3 whitespace-pre-line"><?= esc($response['body']) ?></p><p class="text-xs text-slate-400 mt-3">Meta ID: <?= esc($response['external_response_id'] ?? '-') ?> · <?= esc($response['sent_at'] ?? $response['created_at']) ?></p><?php if (! empty($response['error_message'])): ?><p class="text-xs text-red-600 mt-2"><?= esc($response['error_message']) ?></p><?php endif; ?></div><?php endforeach; ?></div></section><?php endif; ?>
 
-        <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <h2 class="text-xl font-black text-slate-900">Timeline operativo</h2>
-            <div class="mt-6 space-y-5">
-                <?php foreach ($timeline as $event): ?>
-                    <?php $payload = json_decode((string) ($event['payload_json'] ?? '{}'), true) ?: []; ?>
-                    <div class="relative pl-8 border-l-2 border-slate-200 pb-2"><span class="absolute -left-2 top-1 w-3.5 h-3.5 rounded-full bg-pink-600"></span><p class="font-black text-slate-800"><?= esc($event['event_name']) ?></p><p class="text-xs text-slate-400"><?= esc($event['published_at']) ?></p><?php if ($payload): ?><pre class="mt-3 text-xs bg-slate-950 text-slate-200 rounded-xl p-4 overflow-x-auto"><?= esc(json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) ?></pre><?php endif; ?></div>
-                <?php endforeach; ?>
-                <?php if (empty($timeline)): ?><p class="text-slate-500">Todavía no existen eventos para esta atención.</p><?php endif; ?>
-            </div>
-        </section>
+        <?php if (! empty($timelineWidgetHtml)): ?><?= $timelineWidgetHtml ?><?php endif; ?>
     </div>
 
     <aside class="space-y-6">
@@ -112,19 +61,6 @@
     </aside>
 </div>
 
-<script>
-(() => {
-    const textarea = document.getElementById('response-body');
-    const counter = document.getElementById('response-count');
-    if (!textarea || !counter) return;
-    const updateCounter = () => counter.textContent = String(textarea.value.length);
-    document.querySelectorAll('.quick-action').forEach((button) => button.addEventListener('click', () => {
-        const body = button.dataset.body || '';
-        textarea.value = textarea.value.trim() ? textarea.value.trimEnd() + '\n\n' + body : body;
-        textarea.focus(); updateCounter();
-    }));
-    textarea.addEventListener('input', updateCounter); updateCounter();
-})();
-</script>
+<script>(() => { const textarea = document.getElementById('response-body'); const counter = document.getElementById('response-count'); if (!textarea || !counter) return; const updateCounter = () => counter.textContent = String(textarea.value.length); document.querySelectorAll('.quick-action').forEach((button) => button.addEventListener('click', () => { const body = button.dataset.body || ''; textarea.value = textarea.value.trim() ? textarea.value.trimEnd() + '\n\n' + body : body; textarea.focus(); updateCounter(); })); textarea.addEventListener('input', updateCounter); updateCounter(); })();</script>
 
 <?= $this->endSection() ?>
