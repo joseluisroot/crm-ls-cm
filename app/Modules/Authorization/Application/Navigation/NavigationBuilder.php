@@ -59,6 +59,10 @@ final class NavigationBuilder
             $this->item('▶', 'Runtime Inspector', 'admin/workflows/runtime', 'admin/workflows/runtime', true, $can('workflow.view')),
         ]);
 
+        $this->appendGroup($groups, 'Administración', [
+            $this->item('🔐', 'Usuarios y accesos', 'admin/access/users', 'admin/access/users', true, $can('authorization.manage')),
+        ]);
+
         return [
             'profile' => $this->profile($roles),
             'groups' => $groups,
