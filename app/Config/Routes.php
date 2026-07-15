@@ -14,6 +14,11 @@ $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
     $routes->get('/', '\Modules\Dashboard\Controllers\DashboardController::index');
 
     $routes->get('access/users', '\Modules\Authorization\Controllers\UserAccessController::index', ['filter' => 'permission:authorization.manage']);
+    $routes->get('access/users/create', '\Modules\Authorization\Controllers\UserAccessController::create', ['filter' => 'permission:authorization.manage']);
+    $routes->post('access/users', '\Modules\Authorization\Controllers\UserAccessController::store', ['filter' => 'permission:authorization.manage']);
+    $routes->get('access/users/(:num)/edit', '\Modules\Authorization\Controllers\UserAccessController::edit/$1', ['filter' => 'permission:authorization.manage']);
+    $routes->post('access/users/(:num)', '\Modules\Authorization\Controllers\UserAccessController::update/$1', ['filter' => 'permission:authorization.manage']);
+    $routes->post('access/users/(:num)/reset-password', '\Modules\Authorization\Controllers\UserAccessController::resetPassword/$1', ['filter' => 'permission:authorization.manage']);
     $routes->get('access/users/(:num)', '\Modules\Authorization\Controllers\UserAccessController::show/$1', ['filter' => 'permission:authorization.manage']);
     $routes->post('access/users/(:num)/status', '\Modules\Authorization\Controllers\UserAccessController::updateStatus/$1', ['filter' => 'permission:authorization.manage']);
     $routes->post('access/users/(:num)/roles', '\Modules\Authorization\Controllers\UserAccessController::syncRoles/$1', ['filter' => 'permission:authorization.manage']);
