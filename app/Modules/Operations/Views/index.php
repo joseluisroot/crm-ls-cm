@@ -4,38 +4,59 @@
 
 <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5 mb-8">
     <div>
-        <p class="text-sm font-bold uppercase tracking-widest text-pink-600">Unified Work Queue</p>
-        <h1 class="text-3xl font-black text-slate-900 mt-2">Citizen Operations Center</h1>
-        <p class="text-slate-500 mt-2">Una sola cola para atender interacciones ciudadanas, sin importar el canal de origen.</p>
+        <p class="text-sm font-bold uppercase tracking-widest text-pink-600">Operational Work Queues</p>
+        <h1 class="text-3xl font-black text-slate-900 mt-2"><?= esc($title) ?></h1>
+        <p class="text-slate-500 mt-2">Lo pendiente permanece visible; lo completado sale de la bandeja activa sin perder trazabilidad.</p>
     </div>
-    <form method="post" action="<?= site_url('admin/operations/import-facebook-comments') ?>">
-        <?= csrf_field() ?>
-        <button class="px-5 py-3 rounded-xl bg-slate-950 text-white font-bold hover:bg-pink-600 transition">Sincronizar comentarios pendientes</button>
-    </form>
+    <?php if (can('operations.view')): ?>
+        <form method="post" action="<?= site_url('admin/operations/import-facebook-comments') ?>">
+            <?= csrf_field() ?>
+            <button class="px-5 py-3 rounded-xl bg-slate-950 text-white font-bold hover:bg-pink-600 transition">Sincronizar comentarios</button>
+        </form>
+    <?php endif; ?>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-5 mb-8">
-    <?php foreach ([
-        ['label' => 'Total', 'value' => $summary['total'], 'tone' => 'bg-slate-100 text-slate-700'],
-        ['label' => 'Nuevos', 'value' => $summary['new'], 'tone' => 'bg-red-50 text-red-700'],
-        ['label' => 'Asignados', 'value' => $summary['assigned'], 'tone' => 'bg-amber-50 text-amber-700'],
-        ['label' => 'En proceso', 'value' => $summary['in_progress'], 'tone' => 'bg-blue-50 text-blue-700'],
-        ['label' => 'Resueltos', 'value' => $summary['resolved'], 'tone' => 'bg-green-50 text-green-700'],
-    ] as $card): ?>
-        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-            <span class="inline-flex px-3 py-1 rounded-full text-xs font-bold <?= $card['tone'] ?>"><?= esc($card['label']) ?></span>
-            <p class="text-4xl font-black text-slate-900 mt-4"><?= esc($card['value']) ?></p>
-        </div>
+<?php
+$queueCounts = [
+    'PENDING' => $summary['pending'],
+    'ACTIVE' => $summary['active'],
+    'WAITING' => $summary['waiting'],
+    'COMPLETED' => $summary['completed'],
+    'CANCELLED' => $summary['cancelled'],
+];
+$toneClasses = [
+    'red' => 'border-red-200 bg-red-50 text-red-800',
+    'blue' => 'border-blue-200 bg-blue-50 text-blue-800',
+    'amber' => 'border-amber-200 bg-amber-50 text-amber-800',
+    'green' => 'border-green-200 bg-green-50 text-green-800',
+    'slate' => 'border-slate-200 bg-slate-50 text-slate-700',
+];
+?>
+
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 mb-8">
+    <?php foreach ($queues as $code => $definition): ?>
+        <?php $active = $queue === $code; ?>
+        <a href="<?= site_url('admin/operations?' . http_build_query(['queue' => $code])) ?>"
+           class="rounded-2xl border p-5 transition <?= $active ? 'ring-2 ring-pink-500 shadow-md ' : 'hover:shadow-sm ' ?><?= $toneClasses[$definition['tone']] ?? $toneClasses['slate'] ?>">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <p class="font-black"><?= esc($definition['label']) ?></p>
+                    <p class="text-xs opacity-75 mt-1"><?= esc($definition['description']) ?></p>
+                </div>
+                <span class="text-3xl font-black"><?= esc($queueCounts[$code] ?? 0) ?></span>
+            </div>
+        </a>
     <?php endforeach; ?>
 </div>
 
 <section class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
     <div class="p-6 border-b border-slate-200 flex flex-col 2xl:flex-row 2xl:items-center 2xl:justify-between gap-4">
         <div>
-            <h2 class="text-xl font-black text-slate-900">Cola operacional</h2>
-            <p class="text-sm text-slate-500 mt-1">Ordenada por prioridad y antigüedad.</p>
+            <h2 class="text-xl font-black text-slate-900"><?= esc($queues[$queue]['label'] ?? 'Cola operacional') ?></h2>
+            <p class="text-sm text-slate-500 mt-1"><?= esc($queues[$queue]['description'] ?? '') ?></p>
         </div>
         <form method="get" class="flex flex-wrap gap-3">
+            <input type="hidden" name="queue" value="<?= esc($queue) ?>">
             <select name="status" class="rounded-xl border border-slate-300 px-4 py-2 bg-white">
                 <option value="">Todos los estados</option>
                 <?php foreach ($statuses as $option): ?>
@@ -68,18 +89,17 @@
                             <span class="px-2.5 py-1 rounded-full text-xs font-black bg-pink-50 text-pink-700"><?= esc($item['channel']) ?></span>
                             <span class="px-2.5 py-1 rounded-full text-xs font-bold <?= $priorityTone ?>"><?= esc($item['priority_name']) ?></span>
                             <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700"><?= esc($item['status_name']) ?></span>
+                            <?php if (! empty($item['assigned_user_name'])): ?>
+                                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-violet-50 text-violet-700">Responsable: <?= esc($item['assigned_user_name']) ?></span>
+                            <?php endif; ?>
                         </div>
                         <h3 class="text-lg font-black text-slate-900 mt-4"><?= esc($item['author_name'] ?: $item['title']) ?></h3>
                         <p class="text-slate-700 mt-2 whitespace-pre-line"><?= esc($item['comment_message'] ?: $item['summary']) ?></p>
-                        <div class="mt-4 rounded-xl bg-slate-50 border border-slate-200 p-4">
-                            <p class="text-xs uppercase tracking-widest text-slate-400 font-bold">Contexto de publicación</p>
-                            <p class="text-sm text-slate-600 mt-1 line-clamp-2"><?= esc($item['post_message'] ?: $item['external_post_id'] ?: 'Sin contexto disponible') ?></p>
-                        </div>
                     </div>
                     <div class="xl:text-right shrink-0 space-y-3">
                         <p class="text-sm text-slate-400"><?= esc($item['commented_at'] ?: $item['opened_at'] ?: $item['created_at']) ?></p>
                         <p class="text-xs text-slate-400">Work Item #<?= esc($item['id']) ?></p>
-                        <a href="<?= site_url('admin/operations/' . $item['id']) ?>" class="inline-flex px-4 py-2 rounded-xl bg-slate-950 text-white text-sm font-bold hover:bg-pink-600 transition">Abrir consola</a>
+                        <a href="<?= site_url('admin/operations/' . $item['id']) ?>" class="inline-flex px-4 py-2 rounded-xl bg-slate-950 text-white text-sm font-bold hover:bg-pink-600 transition">Abrir atención</a>
                     </div>
                 </div>
             </article>
@@ -87,8 +107,8 @@
 
         <?php if (empty($items)): ?>
             <div class="p-12 text-center">
-                <p class="text-lg font-bold text-slate-700">La cola está vacía.</p>
-                <p class="text-slate-500 mt-2">Sincroniza los comentarios pendientes para crear los primeros Work Items.</p>
+                <p class="text-lg font-bold text-slate-700">No hay atenciones en esta bandeja.</p>
+                <p class="text-slate-500 mt-2">Los registros aparecerán aquí automáticamente cuando entren al ciclo correspondiente.</p>
             </div>
         <?php endif; ?>
     </div>
