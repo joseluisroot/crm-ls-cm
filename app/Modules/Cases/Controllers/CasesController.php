@@ -2,33 +2,38 @@
 
 namespace Modules\Cases\Controllers;
 
-use Modules\Cases\Models\CaseModel;
-use Modules\Cases\Models\CategoryModel;
-use Modules\Cases\Models\CaseStatusModel;
-use Modules\Citizens\Models\CitizenModel;
-use Modules\Cases\Models\CaseHistoryModel;
 use App\Controllers\BaseController;
-use Modules\CaseEngine\Services\CaseLifecycleService;
+use CodeIgniter\Exceptions\PageNotFoundException;
 use Modules\Assignment\Exceptions\AssignmentException;
 use Modules\Assignment\Services\AssignmentEngineService;
 use Modules\Auth\Models\AdminUserModel;
+use Modules\Authorization\Application\OwnershipService;
+use Modules\CaseEngine\Services\CaseLifecycleService;
+use Modules\Cases\Models\CaseHistoryModel;
+use Modules\Cases\Models\CaseModel;
+use Modules\Cases\Models\CaseStatusModel;
+use Modules\Cases\Models\CategoryModel;
+use Modules\Citizens\Models\CitizenModel;
 
 class CasesController extends BaseController
 {
     public function index()
     {
         $caseModel = new CaseModel();
-
-        $cases = $caseModel
+        $builder = $caseModel
             ->select('cases.*, citizens.name as citizen_name, categories.name as category_name, case_statuses.name as status_name')
             ->join('citizens', 'citizens.id = cases.citizen_id')
             ->join('categories', 'categories.id = cases.category_id', 'left')
-            ->join('case_statuses', 'case_statuses.id = cases.status_id')
-            ->orderBy('cases.created_at', 'DESC')
-            ->paginate(20);
+            ->join('case_statuses', 'case_statuses.id = cases.status_id');
+
+        if (can('cases.view_own') && cannot('cases.view')) {
+            $builder->where('cases.assigned_to', $this->currentUserId());
+        }
+
+        $cases = $builder->orderBy('cases.created_at', 'DESC')->paginate(20);
 
         return view('Modules\Cases\Views\index', [
-            'title' => 'Casos',
+            'title' => can('cases.view_own') && cannot('cases.view') ? 'Mis casos' : 'Casos',
             'cases' => $cases,
             'pager' => $caseModel->pager,
         ]);
@@ -46,6 +51,10 @@ class CasesController extends BaseController
 
     public function store()
     {
+        $assignedTo = can('cases.assign')
+            ? (int) $this->request->getPost('assigned_to')
+            : $this->currentUserId();
+
         (new CaseModel())->insert([
             'citizen_id' => $this->request->getPost('citizen_id'),
             'category_id' => $this->request->getPost('category_id'),
@@ -54,14 +63,16 @@ class CasesController extends BaseController
             'description' => $this->request->getPost('description'),
             'priority' => $this->request->getPost('priority'),
             'sentiment' => $this->request->getPost('sentiment'),
-            'assigned_to' => $this->request->getPost('assigned_to'),
+            'assigned_to' => $assignedTo > 0 ? $assignedTo : null,
         ]);
 
-        return redirect()->to('/admin/cases')->with('success', 'Caso creado correctamente.');
+        return redirect()->to(can('cases.view') ? '/admin/cases' : '/admin/my-cases')->with('success', 'Caso creado correctamente.');
     }
 
     public function show($id)
     {
+        $this->requireAccess((int) $id);
+
         $case = (new CaseModel())
             ->select('cases.*, citizens.name as citizen_name, categories.name as category_name, case_statuses.name as status_name')
             ->join('citizens', 'citizens.id = cases.citizen_id')
@@ -70,35 +81,24 @@ class CasesController extends BaseController
             ->where('cases.id', $id)
             ->first();
 
-        $history = (new CaseHistoryModel())
-            ->where('case_id', $id)
-            ->orderBy('created_at', 'ASC')
-            ->findAll();
-
-        $statuses = (new CaseStatusModel())
-            ->orderBy('id', 'ASC')
-            ->findAll();
-
-        $assignableUsers = (new AdminUserModel())
-            ->where('status', 'active')
-            ->orderBy('name', 'ASC')
-            ->findAll();
-
-        if (!$case) {
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Caso no encontrado');
+        if (! $case) {
+            throw PageNotFoundException::forPageNotFound('Caso no encontrado');
         }
 
         return view('Modules\Cases\Views\show', [
             'title' => 'Detalle del caso',
             'case' => $case,
-            'history' => $history,
-            'statuses' => $statuses,
-            'assignableUsers' => $assignableUsers,
+            'history' => (new CaseHistoryModel())->where('case_id', $id)->orderBy('created_at', 'ASC')->findAll(),
+            'statuses' => (new CaseStatusModel())->orderBy('id', 'ASC')->findAll(),
+            'assignableUsers' => can('cases.assign')
+                ? (new AdminUserModel())->where('status', 'active')->orderBy('name', 'ASC')->findAll()
+                : [],
         ]);
     }
 
     public function changeStatus($id)
     {
+        $this->requireAction((int) $id, 'cases.update');
         $statusId = (int) $this->request->getPost('status_id');
 
         if ($statusId <= 0) {
@@ -118,81 +118,67 @@ class CasesController extends BaseController
     public function assign($id)
     {
         $userId = (int) $this->request->getPost('assigned_user_id');
-
         if ($userId <= 0) {
-            return redirect()
-                ->back()
-                ->with('error', 'Selecciona un responsable válido.');
+            return redirect()->back()->with('error', 'Selecciona un responsable válido.');
         }
 
         try {
             (new AssignmentEngineService())->assignCase(
                 caseId: (int) $id,
                 userId: $userId,
-                performedByUserId: (int) session()->get('admin_user_id')
+                performedByUserId: $this->currentUserId()
             );
-
-            return redirect()
-                ->back()
-                ->with('success', 'Caso asignado correctamente.');
+            return redirect()->back()->with('success', 'Caso asignado correctamente.');
         } catch (AssignmentException $e) {
-            return redirect()
-                ->back()
-                ->with('error', $e->getMessage());
+            return redirect()->back()->with('error', $e->getMessage());
         } catch (\Throwable $e) {
-            log_message(
-                'error',
-                'Error asignando caso: ' . $e->getMessage()
-            );
-
-            return redirect()
-                ->back()
-                ->with(
-                    'error',
-                    'Ocurrió un error al asignar el caso.'
-                );
+            log_message('error', 'Error asignando caso: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Ocurrió un error al asignar el caso.');
         }
     }
+
     public function unassign($id)
     {
         try {
             (new AssignmentEngineService())->unassignCase(
                 caseId: (int) $id,
-                performedByUserId: (int) session()->get('admin_user_id')
+                performedByUserId: $this->currentUserId()
             );
-
-            return redirect()
-                ->back()
-                ->with('success', 'Asignación retirada correctamente.');
+            return redirect()->back()->with('success', 'Asignación retirada correctamente.');
         } catch (AssignmentException $e) {
-            return redirect()
-                ->back()
-                ->with('error', $e->getMessage());
+            return redirect()->back()->with('error', $e->getMessage());
         } catch (\Throwable $e) {
-            log_message(
-                'error',
-                'Error retirando asignación: ' . $e->getMessage()
-            );
-
-            return redirect()
-                ->back()
-                ->with(
-                    'error',
-                    'No fue posible retirar la asignación.'
-                );
+            log_message('error', 'Error retirando asignación: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'No fue posible retirar la asignación.');
         }
     }
 
     public function myCases()
     {
-        $userId = (int) session()->get('admin_user_id');
-
-        $cases = (new AssignmentEngineService())
-            ->getUserCases($userId);
+        $cases = (new AssignmentEngineService())->getUserCases($this->currentUserId());
 
         return view('Modules\Cases\Views\my_cases', [
             'title' => 'Mis casos asignados',
             'cases' => $cases,
         ]);
+    }
+
+    private function requireAccess(int $caseId): void
+    {
+        if (! (new OwnershipService())->canAccessCase($this->currentUserId(), $caseId)) {
+            throw PageNotFoundException::forPageNotFound('Caso no encontrado o fuera de tu alcance.');
+        }
+    }
+
+    private function requireAction(int $caseId, string $permission): void
+    {
+        if (! (new OwnershipService())->canActOnCase($this->currentUserId(), $caseId, $permission)) {
+            throw PageNotFoundException::forPageNotFound('Caso no encontrado o acción no autorizada.');
+        }
+    }
+
+    private function currentUserId(): int
+    {
+        return (int) session()->get('admin_user_id');
     }
 }
