@@ -5,6 +5,7 @@ use App\Controllers\BaseController;
 use CodeIgniter\Exceptions\PageNotFoundException;
 use Modules\Authorization\Application\OwnershipService;
 use Modules\Authorization\Application\TeamScopeService;
+use Modules\Cases\Presentation\Widgets\CaseWidget;
 use Modules\Citizen\Presentation\Widgets\CitizenWidget;
 use Modules\Core\UI\Widgets\WidgetContext;
 use Modules\Core\UI\Widgets\WidgetRenderer;
@@ -31,12 +32,7 @@ final class OperationsController extends BaseController
         $query = service('operationsQueueQuery');
         $scopeUserIds = $this->scopeUserIds();
         $result = $query->paginate($group, $status, $priority, $search, $page, $perPage, $scopeUserIds);
-        return view('Modules\Operations\Views\index', [
-            'title' => $this->scopeTitle(), 'summary' => $query->summary($scopeUserIds), 'items' => $result['items'],
-            'pagination' => $result, 'queues' => $catalog->all(), 'queue' => $group, 'statuses' => $query->statuses(),
-            'priorities' => $query->priorities(), 'status' => $status, 'priority' => $priority, 'search' => $search,
-            'perPage' => $result['perPage'],
-        ]);
+        return view('Modules\Operations\Views\index', ['title' => $this->scopeTitle(), 'summary' => $query->summary($scopeUserIds), 'items' => $result['items'], 'pagination' => $result, 'queues' => $catalog->all(), 'queue' => $group, 'statuses' => $query->statuses(), 'priorities' => $query->priorities(), 'status' => $status, 'priority' => $priority, 'search' => $search, 'perPage' => $result['perPage']]);
     }
 
     public function show(int $id)
@@ -45,39 +41,24 @@ final class OperationsController extends BaseController
         $query = service('operationsDetailQuery');
         $item = $query->find($id);
         if (! $item) throw PageNotFoundException::forPageNotFound('Work Item no encontrado.');
-
-        $context = new WidgetContext(
-            viewerUserId: $this->currentUserId(),
-            workItemId: $id,
-            citizenId: (int) ($item['citizen_id'] ?? 0) ?: null,
-            caseId: (int) ($item['case_id'] ?? 0) ?: null,
-        );
+        $context = new WidgetContext(viewerUserId: $this->currentUserId(), workItemId: $id, citizenId: (int) ($item['citizen_id'] ?? 0) ?: null, caseId: (int) ($item['case_id'] ?? 0) ?: null);
         $renderer = new WidgetRenderer();
-
         $citizenWidget = new CitizenWidget();
-        $citizenWidgetHtml = $citizenWidget->supports($context)
-            ? $renderer->render($citizenWidget->build($context))
-            : null;
-
         $timelineWidget = new TimelineWidget();
-        $timelineWidgetHtml = $timelineWidget->supports($context)
-            ? $renderer->render($timelineWidget->build($context))
-            : null;
-
         $slaWidget = new SlaWidget();
-        $slaWidgetHtml = $slaWidget->supports($context)
-            ? $renderer->render($slaWidget->build($context))
-            : null;
-
+        $caseWidget = new CaseWidget();
         $catalog = new QuickActionCatalog();
         $authorName = $item['source']['author_name'] ?? $item['title'] ?? null;
         $channel = strtoupper((string) ($item['channel'] ?? ''));
         $quickActions = array_map(static fn (array $action): array => $catalog->personalize($action, $authorName), $catalog->forChannel($channel));
         $db = db_connect();
-
         return view('Modules\Operations\Views\show', [
-            'title' => 'Atención #' . $id, 'item' => $item, 'citizenWidgetHtml' => $citizenWidgetHtml,
-            'timelineWidgetHtml' => $timelineWidgetHtml, 'slaWidgetHtml' => $slaWidgetHtml,
+            'title' => 'Atención #' . $id,
+            'item' => $item,
+            'citizenWidgetHtml' => $citizenWidget->supports($context) ? $renderer->render($citizenWidget->build($context)) : null,
+            'timelineWidgetHtml' => $timelineWidget->supports($context) ? $renderer->render($timelineWidget->build($context)) : null,
+            'slaWidgetHtml' => $slaWidget->supports($context) ? $renderer->render($slaWidget->build($context)) : null,
+            'caseWidgetHtml' => $caseWidget->supports($context) ? $renderer->render($caseWidget->build($context)) : null,
             'users' => $this->assignableUsers($query), 'statuses' => $query->statuses(), 'priorities' => $query->priorities(),
             'responseDraft' => (new ResponseDraftService($db))->findForWorkItem($id),
             'responseCapability' => (new ResponseContextResolver($db))->capability($id),
@@ -87,19 +68,8 @@ final class OperationsController extends BaseController
     }
 
     public function importPending() { $count = service('facebookCommentWorkItemAdapter')->importPending(500); return redirect()->to(site_url('admin/operations?queue=PENDING'))->with('success', $count . ' comentarios fueron sincronizados con Citizen Operations.'); }
-    public function assign(int $id)
-    {
-        $userId = (int) $this->request->getPost('assigned_user_id');
-        if ($userId <= 0) return redirect()->back()->with('error', 'Selecciona un responsable válido.');
-        if (cannot('operations.view') && ! in_array($userId, (new TeamScopeService())->userIdsInScope($this->currentUserId()), true)) throw PageNotFoundException::forPageNotFound('Responsable fuera del alcance de tu equipo.');
-        return $this->execute(function () use ($id, $userId): void { service('citizenOperations')->assign($id, $userId); (new SlaClockService())->assigned($id, $userId); }, 'Atención asignada.');
-    }
-    public function changeStatus(int $id)
-    {
-        $this->requireAction($id, 'operations.update');
-        $status = strtoupper(trim((string) $this->request->getPost('status')));
-        return $this->execute(function () use ($id, $status): void { service('citizenOperations')->changeStatus($id, $status); if (in_array($status, ['RESOLVED', 'CLOSED'], true)) (new SlaClockService())->resolved($id, $this->currentUserId() ?: null); }, 'Estado actualizado.');
-    }
+    public function assign(int $id) { $userId = (int) $this->request->getPost('assigned_user_id'); if ($userId <= 0) return redirect()->back()->with('error', 'Selecciona un responsable válido.'); if (cannot('operations.view') && ! in_array($userId, (new TeamScopeService())->userIdsInScope($this->currentUserId()), true)) throw PageNotFoundException::forPageNotFound('Responsable fuera del alcance de tu equipo.'); return $this->execute(function () use ($id, $userId): void { service('citizenOperations')->assign($id, $userId); (new SlaClockService())->assigned($id, $userId); }, 'Atención asignada.'); }
+    public function changeStatus(int $id) { $this->requireAction($id, 'operations.update'); $status = strtoupper(trim((string) $this->request->getPost('status'))); return $this->execute(function () use ($id, $status): void { service('citizenOperations')->changeStatus($id, $status); if (in_array($status, ['RESOLVED', 'CLOSED'], true)) (new SlaClockService())->resolved($id, $this->currentUserId() ?: null); }, 'Estado actualizado.'); }
     public function changePriority(int $id) { $this->requireAction($id, 'operations.update'); return $this->execute(fn () => service('citizenOperations')->changePriority($id, strtoupper(trim((string) $this->request->getPost('priority')))), 'Prioridad actualizada.'); }
     public function markResponded(int $id) { $this->requireAction($id, 'operations.close'); return $this->execute(function () use ($id): void { service('citizenOperations')->markResponded($id); (new SlaClockService())->firstResponse($id, $this->currentUserId() ?: null); }, 'Primera respuesta registrada.'); }
     private function scopeUserIds(): ?array { if (can('operations.view')) return null; if (can('operations.view_team')) return (new TeamScopeService())->userIdsInScope($this->currentUserId()); return [$this->currentUserId()]; }
