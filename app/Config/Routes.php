@@ -13,6 +13,11 @@ $routes->get('admin/logout', '\Modules\Auth\Controllers\AuthController::logout')
 $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
     $routes->get('/', '\Modules\Dashboard\Controllers\DashboardController::index');
 
+    $routes->get('access/users', '\Modules\Authorization\Controllers\UserAccessController::index', ['filter' => 'permission:authorization.manage']);
+    $routes->get('access/users/(:num)', '\Modules\Authorization\Controllers\UserAccessController::show/$1', ['filter' => 'permission:authorization.manage']);
+    $routes->post('access/users/(:num)/status', '\Modules\Authorization\Controllers\UserAccessController::updateStatus/$1', ['filter' => 'permission:authorization.manage']);
+    $routes->post('access/users/(:num)/roles', '\Modules\Authorization\Controllers\UserAccessController::syncRoles/$1', ['filter' => 'permission:authorization.manage']);
+
     $routes->get('operations', '\Modules\Operations\Controllers\OperationsController::index');
     $routes->post('operations/import-facebook-comments', '\Modules\Operations\Controllers\OperationsController::importPending');
     $routes->get('operations/(:num)', '\Modules\Operations\Controllers\OperationsController::show/$1');
