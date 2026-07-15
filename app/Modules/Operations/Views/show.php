@@ -52,6 +52,7 @@
     </div>
 
     <aside class="space-y-6">
+        <?php if (! empty($slaWidgetHtml)): ?><?= $slaWidgetHtml ?><?php endif; ?>
         <?php if (! empty($citizenWidgetHtml)): ?><?= $citizenWidgetHtml ?><?php endif; ?>
         <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
             <h2 class="text-xl font-black text-slate-900">Acciones operativas</h2>

@@ -10,6 +10,7 @@ use Modules\Core\UI\Widgets\WidgetContext;
 use Modules\Core\UI\Widgets\WidgetRenderer;
 use Modules\Operations\Application\OperationalQueueCatalog;
 use Modules\Operations\Application\SlaClockService;
+use Modules\Operations\Presentation\Widgets\SlaWidget;
 use Modules\Operations\Presentation\Widgets\TimelineWidget;
 use Modules\Response\Application\QuickActionCatalog;
 use Modules\Response\Application\ResponseContextResolver;
@@ -52,11 +53,21 @@ final class OperationsController extends BaseController
             caseId: (int) ($item['case_id'] ?? 0) ?: null,
         );
         $renderer = new WidgetRenderer();
-        $citizenWidgetHtml = null;
+
         $citizenWidget = new CitizenWidget();
-        if ($citizenWidget->supports($context)) $citizenWidgetHtml = $renderer->render($citizenWidget->build($context));
+        $citizenWidgetHtml = $citizenWidget->supports($context)
+            ? $renderer->render($citizenWidget->build($context))
+            : null;
+
         $timelineWidget = new TimelineWidget();
-        $timelineWidgetHtml = $timelineWidget->supports($context) ? $renderer->render($timelineWidget->build($context)) : null;
+        $timelineWidgetHtml = $timelineWidget->supports($context)
+            ? $renderer->render($timelineWidget->build($context))
+            : null;
+
+        $slaWidget = new SlaWidget();
+        $slaWidgetHtml = $slaWidget->supports($context)
+            ? $renderer->render($slaWidget->build($context))
+            : null;
 
         $catalog = new QuickActionCatalog();
         $authorName = $item['source']['author_name'] ?? $item['title'] ?? null;
@@ -66,8 +77,8 @@ final class OperationsController extends BaseController
 
         return view('Modules\Operations\Views\show', [
             'title' => 'Atención #' . $id, 'item' => $item, 'citizenWidgetHtml' => $citizenWidgetHtml,
-            'timelineWidgetHtml' => $timelineWidgetHtml, 'users' => $this->assignableUsers($query),
-            'statuses' => $query->statuses(), 'priorities' => $query->priorities(),
+            'timelineWidgetHtml' => $timelineWidgetHtml, 'slaWidgetHtml' => $slaWidgetHtml,
+            'users' => $this->assignableUsers($query), 'statuses' => $query->statuses(), 'priorities' => $query->priorities(),
             'responseDraft' => (new ResponseDraftService($db))->findForWorkItem($id),
             'responseCapability' => (new ResponseContextResolver($db))->capability($id),
             'responses' => $db->table('citizen_responses')->where('work_item_id', $id)->orderBy('id', 'DESC')->get()->getResultArray(),
