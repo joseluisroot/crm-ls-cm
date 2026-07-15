@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Modules\Response\Controllers;
 
 use App\Controllers\BaseController;
+use CodeIgniter\Exceptions\PageNotFoundException;
+use Modules\Authorization\Application\OwnershipService;
 use Modules\Response\Application\ResponseContextResolver;
 use Modules\Response\Application\ResponseDispatcher;
 use Modules\Response\Application\ResponseDraftService;
@@ -16,10 +18,12 @@ final class ResponseDraftController extends BaseController
 {
     public function save(int $workItemId)
     {
+        $this->requireReplyAccess($workItemId);
+
         try {
             (new ResponseDraftService(db_connect()))->save(
                 workItemId: $workItemId,
-                userId: session()->get('admin_user_id') ? (int) session()->get('admin_user_id') : null,
+                userId: $this->currentUserId() ?: null,
                 channel: (string) $this->request->getPost('channel'),
                 body: (string) $this->request->getPost('body'),
             );
@@ -32,10 +36,12 @@ final class ResponseDraftController extends BaseController
 
     public function send(int $workItemId)
     {
+        $this->requireReplyAccess($workItemId);
+
         try {
             $result = $this->dispatcher()->dispatch(
                 $workItemId,
-                session()->get('admin_user_id') ? (int) session()->get('admin_user_id') : null,
+                $this->currentUserId() ?: null,
                 (string) $this->request->getPost('body'),
             );
             return redirect()->back()->with('success', sprintf('Respuesta enviada por %s. ID Meta: %s', $result['channel'], $result['external_response_id']));
@@ -43,6 +49,18 @@ final class ResponseDraftController extends BaseController
             log_message('error', 'Citizen response dispatch failed: ' . $error->getMessage());
             return redirect()->back()->with('error', 'No se envió la respuesta: ' . $error->getMessage());
         }
+    }
+
+    private function requireReplyAccess(int $workItemId): void
+    {
+        if (! (new OwnershipService())->canActOnWorkItem($this->currentUserId(), $workItemId, 'operations.reply')) {
+            throw PageNotFoundException::forPageNotFound('Atención no encontrada o fuera de tu alcance.');
+        }
+    }
+
+    private function currentUserId(): int
+    {
+        return (int) session()->get('admin_user_id');
     }
 
     private function dispatcher(): ResponseDispatcher
