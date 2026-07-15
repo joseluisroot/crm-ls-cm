@@ -19,10 +19,9 @@ final class AuthorizationSeeder extends Seeder
         ];
 
         foreach ($roles as $role) {
-            $existing = $this->db->table('roles')->where('code', $role['code'])->get()->getRowArray();
-            if (! $existing) {
+            if (! $this->db->table('roles')->where('code', $role['code'])->countAllResults()) {
                 $this->db->table('roles')->insert($role + [
-                    'uuid' => service('uuid')->uuid4()->toString(),
+                    'uuid' => $this->uuidV4(),
                     'is_system' => 1,
                     'is_active' => 1,
                     'created_at' => $now,
@@ -47,10 +46,9 @@ final class AuthorizationSeeder extends Seeder
 
         foreach ($permissions as $code) {
             [$module, $action] = explode('.', $code, 2);
-            $existing = $this->db->table('permissions')->where('code', $code)->get()->getRowArray();
-            if (! $existing) {
+            if (! $this->db->table('permissions')->where('code', $code)->countAllResults()) {
                 $this->db->table('permissions')->insert([
-                    'uuid' => service('uuid')->uuid4()->toString(),
+                    'uuid' => $this->uuidV4(),
                     'code' => $code,
                     'module' => $module,
                     'action' => $action,
@@ -79,18 +77,29 @@ final class AuthorizationSeeder extends Seeder
                 ? $allPermissionIds
                 : array_column($this->db->table('permissions')->select('id')->whereIn('code', $codes)->get()->getResultArray(), 'id');
             foreach ($permissionIds as $permissionId) {
-                $exists = $this->db->table('role_permissions')->where(['role_id' => $role['id'], 'permission_id' => $permissionId])->countAllResults();
-                if (! $exists) $this->db->table('role_permissions')->insert(['role_id' => $role['id'], 'permission_id' => $permissionId, 'created_at' => $now]);
+                $key = ['role_id' => $role['id'], 'permission_id' => $permissionId];
+                if (! $this->db->table('role_permissions')->where($key)->countAllResults()) {
+                    $this->db->table('role_permissions')->insert($key + ['created_at' => $now]);
+                }
             }
         }
 
         $adminRole = $this->db->table('roles')->where('code', 'ADMINISTRATOR')->get()->getRowArray();
         if ($adminRole) {
-            $admins = $this->db->table('admin_users')->select('id')->where('role', 'admin')->get()->getResultArray();
-            foreach ($admins as $admin) {
-                $exists = $this->db->table('user_roles')->where(['user_id' => $admin['id'], 'role_id' => $adminRole['id']])->countAllResults();
-                if (! $exists) $this->db->table('user_roles')->insert(['user_id' => $admin['id'], 'role_id' => $adminRole['id'], 'assigned_at' => $now]);
+            foreach ($this->db->table('admin_users')->select('id')->where('role', 'admin')->get()->getResultArray() as $admin) {
+                $key = ['user_id' => $admin['id'], 'role_id' => $adminRole['id']];
+                if (! $this->db->table('user_roles')->where($key)->countAllResults()) {
+                    $this->db->table('user_roles')->insert($key + ['assigned_at' => $now]);
+                }
             }
         }
+    }
+
+    private function uuidV4(): string
+    {
+        $data = random_bytes(16);
+        $data[6] = chr((ord($data[6]) & 0x0f) | 0x40);
+        $data[8] = chr((ord($data[8]) & 0x3f) | 0x80);
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
 }
