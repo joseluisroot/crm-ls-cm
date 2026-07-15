@@ -29,7 +29,7 @@
     <div class="p-6 border-b border-slate-200 flex items-center justify-between gap-4">
         <div>
             <h2 class="text-xl font-black text-slate-900">Qué atender primero</h2>
-            <p class="text-sm text-slate-500 mt-1">Ordenado por prioridad y antigüedad.</p>
+            <p class="text-sm text-slate-500 mt-1">Ordenado por prioridad, antigüedad y riesgo de SLA.</p>
         </div>
         <a href="<?= site_url('admin/operations') ?>" class="text-sm font-bold text-pink-600 hover:text-pink-700">Ver todas</a>
     </div>
@@ -42,6 +42,7 @@
                         <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-pink-50 text-pink-700"><?= esc($item['channel']) ?></span>
                         <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700"><?= esc($item['priority_name']) ?></span>
                         <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700"><?= esc($item['status_name']) ?></span>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-black <?= esc($item['sla']['tone']) ?>"><?= esc($item['sla']['label']) ?></span>
                     </div>
                     <h3 class="font-black text-slate-900"><?= esc($item['title'] ?: 'Atención #' . $item['id']) ?></h3>
                     <p class="text-sm text-slate-500 mt-1 line-clamp-2"><?= esc($item['summary'] ?: 'Sin resumen disponible') ?></p>
