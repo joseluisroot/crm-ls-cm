@@ -7,6 +7,7 @@ use CodeIgniter\Exceptions\PageNotFoundException;
 use Modules\Authorization\Application\OwnershipService;
 use Modules\Authorization\Application\TeamScopeService;
 use Modules\Operations\Application\OperationalQueueCatalog;
+use Modules\Operations\Application\SlaClockService;
 use Modules\Response\Application\QuickActionCatalog;
 use Modules\Response\Application\ResponseContextResolver;
 use Modules\Response\Application\ResponseDraftService;
@@ -76,22 +77,42 @@ final class OperationsController extends BaseController
         if (cannot('operations.view') && ! in_array($userId, (new TeamScopeService())->userIdsInScope($this->currentUserId()), true)) {
             throw PageNotFoundException::forPageNotFound('Responsable fuera del alcance de tu equipo.');
         }
-        return $this->execute(fn () => service('citizenOperations')->assign($id, $userId), 'Atención asignada.');
+
+        return $this->execute(function () use ($id, $userId): void {
+            service('citizenOperations')->assign($id, $userId);
+            (new SlaClockService())->assigned($id, $userId);
+        }, 'Atención asignada.');
     }
 
-    public function changeStatus(int $id) { $this->requireAction($id, 'operations.update'); return $this->execute(fn () => service('citizenOperations')->changeStatus($id, strtoupper(trim((string) $this->request->getPost('status')))), 'Estado actualizado.'); }
+    public function changeStatus(int $id)
+    {
+        $this->requireAction($id, 'operations.update');
+        $status = strtoupper(trim((string) $this->request->getPost('status')));
+
+        return $this->execute(function () use ($id, $status): void {
+            service('citizenOperations')->changeStatus($id, $status);
+            if (in_array($status, ['RESOLVED', 'CLOSED'], true)) {
+                (new SlaClockService())->resolved($id, $this->currentUserId() ?: null);
+            }
+        }, 'Estado actualizado.');
+    }
+
     public function changePriority(int $id) { $this->requireAction($id, 'operations.update'); return $this->execute(fn () => service('citizenOperations')->changePriority($id, strtoupper(trim((string) $this->request->getPost('priority')))), 'Prioridad actualizada.'); }
-    public function markResponded(int $id) { $this->requireAction($id, 'operations.close'); return $this->execute(fn () => service('citizenOperations')->markResponded($id), 'Primera respuesta registrada.'); }
+
+    public function markResponded(int $id)
+    {
+        $this->requireAction($id, 'operations.close');
+        return $this->execute(function () use ($id): void {
+            service('citizenOperations')->markResponded($id);
+            (new SlaClockService())->firstResponse($id, $this->currentUserId() ?: null);
+        }, 'Primera respuesta registrada.');
+    }
 
     /** @return int[]|null */
     private function scopeUserIds(): ?array
     {
-        if (can('operations.view')) {
-            return null;
-        }
-        if (can('operations.view_team')) {
-            return (new TeamScopeService())->userIdsInScope($this->currentUserId());
-        }
+        if (can('operations.view')) return null;
+        if (can('operations.view_team')) return (new TeamScopeService())->userIdsInScope($this->currentUserId());
         return [$this->currentUserId()];
     }
 
