@@ -103,5 +103,5 @@ $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
 
 $routes->get('webhooks/messenger', '\Modules\Messenger\Controllers\WebhookController::verify');
 $routes->post('webhooks/messenger', '\Modules\Messenger\Controllers\WebhookController::receive');
-$routes->get('system/migrate', 'SystemController::migrate');
-$routes->get('system/seed/(:segment)', 'SystemController::seed/$1');
+$routes->post('system/migrate', 'SecureSystemController::migrate');
+$routes->post('system/seed/(:segment)', 'SecureSystemController::seed/$1');
