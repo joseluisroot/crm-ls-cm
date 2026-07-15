@@ -1,8 +1,9 @@
 <?= $this->extend('Modules\Dashboard\Views\layout') ?>
 
 <?= $this->section('content') ?>
-<div class="mb-6">
+<div class="mb-6 flex items-center justify-between gap-4">
     <a href="<?= site_url('admin/access/users') ?>" class="text-sm font-bold text-pink-600 hover:text-pink-700">← Volver a usuarios</a>
+    <a href="<?= site_url('admin/access/users/' . $user['id'] . '/edit') ?>" class="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold hover:bg-pink-600">Editar usuario</a>
 </div>
 
 <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -12,35 +13,22 @@
         <p class="text-slate-500 mt-1"><?= esc($user['email']) ?></p>
 
         <dl class="mt-6 space-y-4 text-sm">
-            <div>
-                <dt class="text-slate-400">Estado</dt>
-                <dd class="font-bold text-slate-800 mt-1"><?= ($user['status'] ?? '') === 'active' ? 'Activo' : 'Inactivo' ?></dd>
-            </div>
-            <div>
-                <dt class="text-slate-400">Último acceso</dt>
-                <dd class="font-bold text-slate-800 mt-1"><?= ! empty($user['last_login_at']) ? esc($user['last_login_at']) : 'Nunca' ?></dd>
-            </div>
-            <div>
-                <dt class="text-slate-400">Creado</dt>
-                <dd class="font-bold text-slate-800 mt-1"><?= esc($user['created_at'] ?? '-') ?></dd>
-            </div>
+            <div><dt class="text-slate-400">Estado</dt><dd class="font-bold text-slate-800 mt-1"><?= ($user['status'] ?? '') === 'active' ? 'Activo' : 'Inactivo' ?></dd></div>
+            <div><dt class="text-slate-400">Último acceso</dt><dd class="font-bold text-slate-800 mt-1"><?= ! empty($user['last_login_at']) ? esc($user['last_login_at']) : 'Nunca' ?></dd></div>
+            <div><dt class="text-slate-400">Creado</dt><dd class="font-bold text-slate-800 mt-1"><?= esc($user['created_at'] ?? '-') ?></dd></div>
         </dl>
 
         <form method="post" action="<?= site_url('admin/access/users/' . $user['id'] . '/status') ?>" class="mt-8">
             <?= csrf_field() ?>
             <?php $isActive = ($user['status'] ?? '') === 'active'; ?>
             <input type="hidden" name="status" value="<?= $isActive ? 'inactive' : 'active' ?>">
-            <button type="submit" class="w-full px-4 py-3 rounded-xl font-black transition <?= $isActive ? 'bg-red-50 text-red-700 hover:bg-red-100' : 'bg-emerald-600 text-white hover:bg-emerald-700' ?>" onclick="return confirm('¿Confirmas este cambio de estado?')">
-                <?= $isActive ? 'Desactivar usuario' : 'Activar usuario' ?>
-            </button>
+            <button type="submit" class="w-full px-4 py-3 rounded-xl font-black transition <?= $isActive ? 'bg-red-50 text-red-700 hover:bg-red-100' : 'bg-emerald-600 text-white hover:bg-emerald-700' ?>" onclick="return confirm('¿Confirmas este cambio de estado?')"><?= $isActive ? 'Desactivar usuario' : 'Activar usuario' ?></button>
         </form>
     </section>
 
     <section class="xl:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-        <div>
-            <h3 class="text-xl font-black text-slate-900">Roles asignados</h3>
-            <p class="text-sm text-slate-500 mt-1">Los permisos efectivos se calculan a partir de todos los roles seleccionados.</p>
-        </div>
+        <h3 class="text-xl font-black text-slate-900">Roles asignados</h3>
+        <p class="text-sm text-slate-500 mt-1">Los permisos efectivos se calculan a partir de todos los roles seleccionados.</p>
 
         <form method="post" action="<?= site_url('admin/access/users/' . $user['id'] . '/roles') ?>" class="mt-6">
             <?= csrf_field() ?>
@@ -48,34 +36,32 @@
                 <?php foreach ($roles as $role): ?>
                     <label class="flex gap-3 rounded-2xl border border-slate-200 p-4 hover:border-pink-300 cursor-pointer">
                         <input type="checkbox" name="role_ids[]" value="<?= (int) $role['id'] ?>" class="mt-1" <?= in_array((int) $role['id'], $assignedRoleIds, true) ? 'checked' : '' ?>>
-                        <span>
-                            <strong class="block text-slate-900"><?= esc($role['name']) ?></strong>
-                            <span class="block text-xs font-mono text-pink-600 mt-1"><?= esc($role['code']) ?></span>
-                            <?php if (! empty($role['description'])): ?>
-                                <span class="block text-sm text-slate-500 mt-2"><?= esc($role['description']) ?></span>
-                            <?php endif; ?>
-                        </span>
+                        <span><strong class="block text-slate-900"><?= esc($role['name']) ?></strong><span class="block text-xs font-mono text-pink-600 mt-1"><?= esc($role['code']) ?></span><?php if (! empty($role['description'])): ?><span class="block text-sm text-slate-500 mt-2"><?= esc($role['description']) ?></span><?php endif; ?></span>
                     </label>
                 <?php endforeach; ?>
             </div>
-
-            <div class="mt-6 flex justify-end">
-                <button type="submit" class="px-5 py-3 rounded-xl bg-pink-600 text-white font-black hover:bg-pink-700">Guardar roles</button>
-            </div>
+            <div class="mt-6 flex justify-end"><button type="submit" class="px-5 py-3 rounded-xl bg-pink-600 text-white font-black hover:bg-pink-700">Guardar roles</button></div>
         </form>
     </section>
 </div>
 
 <section class="mt-6 bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+    <h3 class="text-xl font-black text-slate-900">Restablecer contraseña</h3>
+    <p class="text-sm text-slate-500 mt-1">Asigna una contraseña temporal de al menos 10 caracteres y entrégala por un canal seguro.</p>
+    <form method="post" action="<?= site_url('admin/access/users/' . $user['id'] . '/reset-password') ?>" class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <?= csrf_field() ?>
+        <input type="password" name="password" required minlength="10" autocomplete="new-password" placeholder="Nueva contraseña" class="rounded-xl border border-slate-300 px-4 py-3">
+        <input type="password" name="password_confirmation" required minlength="10" autocomplete="new-password" placeholder="Confirmar contraseña" class="rounded-xl border border-slate-300 px-4 py-3">
+        <div class="md:col-span-2 flex justify-end"><button type="submit" class="px-5 py-3 rounded-xl bg-amber-500 text-slate-950 font-black hover:bg-amber-400" onclick="return confirm('¿Confirmas el restablecimiento de contraseña?')">Restablecer contraseña</button></div>
+    </form>
+</section>
+
+<section class="mt-6 bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
     <h3 class="text-xl font-black text-slate-900">Permisos efectivos</h3>
     <p class="text-sm text-slate-500 mt-1">Vista consolidada de las capacidades otorgadas por los roles actuales.</p>
     <div class="mt-5 flex flex-wrap gap-2">
-        <?php foreach ($effectivePermissions as $permission): ?>
-            <span class="rounded-lg bg-slate-100 text-slate-700 px-3 py-2 text-xs font-mono font-bold"><?= esc($permission) ?></span>
-        <?php endforeach; ?>
-        <?php if ($effectivePermissions === []): ?>
-            <span class="text-amber-600 font-semibold">Este usuario no tiene permisos efectivos.</span>
-        <?php endif; ?>
+        <?php foreach ($effectivePermissions as $permission): ?><span class="rounded-lg bg-slate-100 text-slate-700 px-3 py-2 text-xs font-mono font-bold"><?= esc($permission) ?></span><?php endforeach; ?>
+        <?php if ($effectivePermissions === []): ?><span class="text-amber-600 font-semibold">Este usuario no tiene permisos efectivos.</span><?php endif; ?>
     </div>
 </section>
 <?= $this->endSection() ?>
