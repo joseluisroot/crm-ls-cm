@@ -21,7 +21,21 @@
 </head>
 
 <?php
+use Modules\Authorization\Application\Navigation\NavigationBuilder;
+
 $currentPath = trim(service('uri')->getPath(), '/');
+$navigation = (new NavigationBuilder())->build((int) session()->get('admin_user_id'));
+$profile = $navigation['profile'];
+$profileClasses = [
+    'pink' => 'bg-pink-500/10 border-pink-500/30 text-pink-300',
+    'violet' => 'bg-violet-500/10 border-violet-500/30 text-violet-300',
+    'emerald' => 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300',
+    'blue' => 'bg-blue-500/10 border-blue-500/30 text-blue-300',
+    'amber' => 'bg-amber-500/10 border-amber-500/30 text-amber-300',
+    'cyan' => 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300',
+    'slate' => 'bg-slate-800 border-slate-700 text-slate-300',
+];
+$profileClass = $profileClasses[$profile['accent']] ?? $profileClasses['slate'];
 $navClass = static function (string $path, bool $prefix = false) use ($currentPath): string {
     $active = $prefix ? str_starts_with($currentPath, trim($path, '/')) : $currentPath === trim($path, '/');
 
@@ -57,52 +71,32 @@ $navClass = static function (string $path, bool $prefix = false) use ($currentPa
         </div>
 
         <nav class="mt-8 space-y-2 overflow-y-auto pr-1">
-            <a href="<?= site_url('admin') ?>" class="<?= $navClass('admin') ?>">🏠 Executive Dashboard</a>
-
-            <div class="pt-4 mt-4 border-t border-slate-800">
-                <p class="px-4 mb-2 text-xs uppercase tracking-widest text-slate-500">Citizen Operations</p>
-                <a href="<?= site_url('admin/operations') ?>" class="<?= $navClass('admin/operations', true) ?>">📥 Unified Operations Queue</a>
-                <a href="<?= site_url('admin/publications') ?>" class="<?= $navClass('admin/publications', true) ?>">📢 Publication Center</a>
-                <a href="<?= site_url('admin/engagement') ?>" class="<?= $navClass('admin/engagement') ?>">🌍 Public Engagement</a>
-                <a href="<?= site_url('admin/engagement/participants') ?>" class="<?= $navClass('admin/engagement/participants') ?>">👥 Citizen Participation</a>
-            </div>
-
-            <div class="pt-4 mt-4 border-t border-slate-800">
-                <p class="px-4 mb-2 text-xs uppercase tracking-widest text-slate-500">Attention Management</p>
-                <a href="<?= site_url('admin/citizens') ?>" class="<?= $navClass('admin/citizens', true) ?>">👤 Citizen Center</a>
-                <a href="<?= site_url('admin/conversations') ?>" class="<?= $navClass('admin/conversations', true) ?>">💬 Conversation Center</a>
-                <a href="<?= site_url('admin/cases') ?>" class="<?= $navClass('admin/cases', true) ?>">📁 Case Management</a>
-                <a href="<?= site_url('admin/my-cases') ?>" class="<?= $navClass('admin/my-cases') ?>">✅ My Assigned Cases</a>
-                <a href="<?= site_url('admin/notifications') ?>" class="<?= $navClass('admin/notifications', true) ?>">🔔 Notification Center</a>
-                <a href="<?= site_url('admin/messenger/events') ?>" class="<?= $navClass('admin/messenger/events', true) ?>">💙 Channel Events</a>
-            </div>
-
-            <div class="pt-4 mt-4 border-t border-slate-800">
-                <p class="px-4 mb-2 text-xs uppercase tracking-widest text-slate-500">Intelligence</p>
-                <a href="<?= site_url('admin/analytics') ?>" class="<?= $navClass('admin/analytics', true) ?>">📊 Intelligence Center</a>
-            </div>
-
-            <div class="pt-4 mt-4 border-t border-slate-800">
-                <p class="px-4 mb-2 text-xs uppercase tracking-widest text-slate-500">Observability</p>
-                <a href="<?= site_url('admin/integration/events') ?>" class="<?= $navClass('admin/integration/events', true) ?>">🔁 Replay Center</a>
-            </div>
-
-            <div class="pt-4 mt-4 border-t border-slate-800">
-                <p class="px-4 mb-2 text-xs uppercase tracking-widest text-slate-500">Process Automation</p>
-                <a href="<?= site_url('admin/workflows') ?>" class="<?= $navClass('admin/workflows') ?>">⚙️ Workflow Designer</a>
-                <a href="<?= site_url('admin/workflows/simulator') ?>" class="<?= $navClass('admin/workflows/simulator', true) ?>">🧪 Workflow Simulator</a>
-                <a href="<?= site_url('admin/workflows/runtime') ?>" class="<?= $navClass('admin/workflows/runtime', true) ?>">▶ Runtime Inspector</a>
-            </div>
+            <?php foreach ($navigation['groups'] as $groupIndex => $group): ?>
+                <div class="<?= $groupIndex > 0 ? 'pt-4 mt-4 border-t border-slate-800' : '' ?>">
+                    <p class="px-4 mb-2 text-xs uppercase tracking-widest text-slate-500"><?= esc($group['label']) ?></p>
+                    <div class="space-y-2">
+                        <?php foreach ($group['items'] as $item): ?>
+                            <a href="<?= site_url($item['url']) ?>" class="<?= $navClass($item['activePath'], (bool) $item['prefix']) ?>">
+                                <span aria-hidden="true"><?= esc($item['icon']) ?></span>
+                                <?= esc($item['label']) ?>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endforeach; ?>
         </nav>
 
         <div class="mt-auto pt-8">
             <div class="border-t border-slate-800 pt-6">
                 <p class="text-xs uppercase tracking-widest text-slate-500">Usuario activo</p>
-                <p class="font-semibold mt-1 mb-5"><?= esc(session()->get('admin_user_name') ?? 'Administrador') ?></p>
+                <p class="font-semibold mt-1"><?= esc(session()->get('admin_user_name') ?? 'Usuario') ?></p>
+                <div class="inline-flex mt-2 mb-5 px-3 py-1 rounded-full border text-xs font-bold <?= $profileClass ?>">
+                    <?= esc($profile['label']) ?>
+                </div>
                 <a href="<?= site_url('admin/logout') ?>" class="block text-center px-4 py-3 rounded-xl bg-slate-800 hover:bg-red-600 transition font-semibold">Cerrar sesión</a>
                 <div class="mt-6 text-center">
                     <p class="text-xs text-slate-500">CIAC Platform</p>
-                    <p class="text-xs text-slate-600 mt-1">Version 1.3 Observability</p>
+                    <p class="text-xs text-slate-600 mt-1">Version 1.4 Operational Foundation</p>
                 </div>
             </div>
         </div>
@@ -112,13 +106,13 @@ $navClass = static function (string $path, bool $prefix = false) use ($currentPa
         <header class="mb-10">
             <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
                 <div>
-                    <p class="text-sm uppercase tracking-[0.20em] text-pink-600 font-bold">CIAC Platform</p>
+                    <p class="text-sm uppercase tracking-[0.20em] text-pink-600 font-bold">CIAC Platform · <?= esc($profile['label']) ?></p>
                     <h2 class="text-4xl font-black text-slate-900 mt-2"><?= esc($title ?? '') ?></h2>
                     <p class="text-slate-500 mt-2">Centro Inteligente de Atención Ciudadana</p>
                 </div>
                 <div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 shadow-sm">
-                    <p class="text-xs uppercase tracking-widest text-slate-400">Plataforma</p>
-                    <p class="font-bold text-slate-800 mt-1">Citizen Intelligence & Attention Center</p>
+                    <p class="text-xs uppercase tracking-widest text-slate-400">Experiencia activa</p>
+                    <p class="font-bold text-slate-800 mt-1"><?= esc($profile['label']) ?></p>
                 </div>
             </div>
         </header>
