@@ -21,7 +21,7 @@ final class NavigationBuilder
         $groups = [];
 
         $this->appendGroup($groups, 'Inicio', [
-            $this->item('🏠', $isOwnView ? 'Mi trabajo' : 'Dashboard', 'admin', 'admin', false, $can('dashboard.view')),
+            $this->item('🏠', $isOwnView ? 'Mi trabajo' : 'Dashboard', $isOwnView ? 'admin/my-work' : 'admin', $isOwnView ? 'admin/my-work' : 'admin', false, $can('dashboard.view')),
         ]);
 
         $this->appendGroup($groups, $isOwnView ? 'Mi trabajo' : ($isTeamView ? 'Mi equipo' : 'Citizen Operations'), [
