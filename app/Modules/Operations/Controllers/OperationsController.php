@@ -21,21 +21,26 @@ final class OperationsController extends BaseController
         $group = $catalog->normalize((string) $this->request->getGet('queue'));
         $status = trim((string) $this->request->getGet('status')) ?: null;
         $priority = trim((string) $this->request->getGet('priority')) ?: null;
-        $limit = (int) ($this->request->getGet('limit') ?: 100);
+        $search = trim((string) $this->request->getGet('q'));
+        $page = max(1, (int) ($this->request->getGet('page') ?: 1));
+        $perPage = (int) ($this->request->getGet('per_page') ?: 25);
         $query = service('operationsQueueQuery');
         $scopeUserIds = $this->scopeUserIds();
+        $result = $query->paginate($group, $status, $priority, $search, $page, $perPage, $scopeUserIds);
 
         return view('Modules\Operations\Views\index', [
             'title' => $this->scopeTitle(),
             'summary' => $query->summary($scopeUserIds),
-            'items' => $query->items($group, $status, $priority, $limit, $scopeUserIds),
+            'items' => $result['items'],
+            'pagination' => $result,
             'queues' => $catalog->all(),
             'queue' => $group,
             'statuses' => $query->statuses(),
             'priorities' => $query->priorities(),
             'status' => $status,
             'priority' => $priority,
-            'limit' => max(1, min($limit, 200)),
+            'search' => $search,
+            'perPage' => $result['perPage'],
         ]);
     }
 
