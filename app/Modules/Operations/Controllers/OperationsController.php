@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use CodeIgniter\Exceptions\PageNotFoundException;
 use Modules\Authorization\Application\OwnershipService;
 use Modules\Authorization\Application\TeamScopeService;
+use Modules\Operations\Application\OperationalQueueCatalog;
 use Modules\Response\Application\QuickActionCatalog;
 use Modules\Response\Application\ResponseContextResolver;
 use Modules\Response\Application\ResponseDraftService;
@@ -15,31 +16,25 @@ final class OperationsController extends BaseController
 {
     public function index()
     {
+        $catalog = new OperationalQueueCatalog();
+        $group = $catalog->normalize((string) $this->request->getGet('queue'));
         $status = trim((string) $this->request->getGet('status')) ?: null;
         $priority = trim((string) $this->request->getGet('priority')) ?: null;
         $limit = (int) ($this->request->getGet('limit') ?: 100);
         $query = service('operationsQueueQuery');
-        $items = $query->items($status, $priority, $limit);
-        $title = 'Citizen Operations';
-
-        if (cannot('operations.view')) {
-            $userId = $this->currentUserId();
-            $allowedUserIds = can('operations.view_team')
-                ? (new TeamScopeService())->userIdsInScope($userId)
-                : [$userId];
-            $allowedIds = array_map('intval', array_column(
-                db_connect()->table('work_items')->select('id')->whereIn('assigned_user_id', $allowedUserIds)->get()->getResultArray(),
-                'id'
-            ));
-            $items = array_values(array_filter($items, static fn (array $item): bool => in_array((int) ($item['id'] ?? 0), $allowedIds, true)));
-            $title = can('operations.view_team') ? 'Atenciones de mi equipo' : 'Mis atenciones';
-        }
+        $scopeUserIds = $this->scopeUserIds();
 
         return view('Modules\Operations\Views\index', [
-            'title' => $title,
-            'summary' => $query->summary(), 'items' => $items,
-            'statuses' => $query->statuses(), 'priorities' => $query->priorities(),
-            'status' => $status, 'priority' => $priority, 'limit' => max(1, min($limit, 200)),
+            'title' => $this->scopeTitle(),
+            'summary' => $query->summary($scopeUserIds),
+            'items' => $query->items($group, $status, $priority, $limit, $scopeUserIds),
+            'queues' => $catalog->all(),
+            'queue' => $group,
+            'statuses' => $query->statuses(),
+            'priorities' => $query->priorities(),
+            'status' => $status,
+            'priority' => $priority,
+            'limit' => max(1, min($limit, 200)),
         ]);
     }
 
@@ -71,7 +66,7 @@ final class OperationsController extends BaseController
     public function importPending()
     {
         $count = service('facebookCommentWorkItemAdapter')->importPending(500);
-        return redirect()->to(site_url('admin/operations'))->with('success', $count . ' comentarios fueron sincronizados con Citizen Operations.');
+        return redirect()->to(site_url('admin/operations?queue=PENDING'))->with('success', $count . ' comentarios fueron sincronizados con Citizen Operations.');
     }
 
     public function assign(int $id)
@@ -87,6 +82,25 @@ final class OperationsController extends BaseController
     public function changeStatus(int $id) { $this->requireAction($id, 'operations.update'); return $this->execute(fn () => service('citizenOperations')->changeStatus($id, strtoupper(trim((string) $this->request->getPost('status')))), 'Estado actualizado.'); }
     public function changePriority(int $id) { $this->requireAction($id, 'operations.update'); return $this->execute(fn () => service('citizenOperations')->changePriority($id, strtoupper(trim((string) $this->request->getPost('priority')))), 'Prioridad actualizada.'); }
     public function markResponded(int $id) { $this->requireAction($id, 'operations.close'); return $this->execute(fn () => service('citizenOperations')->markResponded($id), 'Primera respuesta registrada.'); }
+
+    /** @return int[]|null */
+    private function scopeUserIds(): ?array
+    {
+        if (can('operations.view')) {
+            return null;
+        }
+        if (can('operations.view_team')) {
+            return (new TeamScopeService())->userIdsInScope($this->currentUserId());
+        }
+        return [$this->currentUserId()];
+    }
+
+    private function scopeTitle(): string
+    {
+        if (can('operations.view')) return 'Citizen Operations';
+        if (can('operations.view_team')) return 'Atenciones de mi equipo';
+        return 'Mi trabajo';
+    }
 
     private function assignableUsers(object $query): array
     {
