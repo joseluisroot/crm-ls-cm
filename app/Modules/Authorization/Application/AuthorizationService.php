@@ -40,8 +40,10 @@ final class AuthorizationService
         }
 
         $db = $this->database();
-        if (! $db->tableExists('user_roles') || ! $db->tableExists('role_permissions') || ! $db->tableExists('permissions')) {
-            return $this->legacyAdministratorPermissions($userId);
+        foreach (['roles', 'permissions', 'role_permissions', 'user_roles'] as $table) {
+            if (! $db->tableExists($table)) {
+                return $this->legacyAdministratorPermissions($userId);
+            }
         }
 
         $rows = $db->table('permissions p')
@@ -56,7 +58,7 @@ final class AuthorizationService
             ->get()
             ->getResultArray();
 
-        $permissions = array_values(array_unique(array_column($rows, 'code')));
+        $permissions = array_values(array_unique(array_map('strval', array_column($rows, 'code'))));
 
         // Compatibilidad temporal: un administrador legado no debe quedar bloqueado
         // durante la transición hacia user_roles.
@@ -93,7 +95,7 @@ final class AuthorizationService
             ->get()
             ->getResultArray();
 
-        $roles = array_values(array_unique(array_column($rows, 'code')));
+        $roles = array_values(array_unique(array_map('strval', array_column($rows, 'code'))));
 
         return $roles !== [] ? $roles : ($this->isLegacyAdministrator($userId) ? ['ADMINISTRATOR'] : []);
     }
@@ -131,7 +133,7 @@ final class AuthorizationService
             return [];
         }
 
-        return array_values(array_column(
+        return array_values(array_map('strval', array_column(
             $db->table('permissions')
                 ->select('code')
                 ->where('is_active', 1)
@@ -139,7 +141,7 @@ final class AuthorizationService
                 ->get()
                 ->getResultArray(),
             'code'
-        ));
+        )));
     }
 
     private function isLegacyAdministrator(int $userId): bool
