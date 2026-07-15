@@ -40,7 +40,10 @@ final class NavigationBuilder
             $this->item('🔔', 'Notification Center', 'admin/notifications', 'admin/notifications', true, $can('notifications.view')),
         ]);
 
-        $this->appendGroup($groups, 'Inteligencia', [$this->item('📊', 'Intelligence Center', 'admin/analytics', 'admin/analytics', true, $can('analytics.view', 'analytics.team'))]);
+        $this->appendGroup($groups, 'Inteligencia', [
+            $this->item('📊', 'Intelligence Center', 'admin/analytics', 'admin/analytics', true, $can('analytics.view', 'analytics.team')),
+            $this->item('⏱️', 'Citizen Performance', 'admin/performance', 'admin/performance', true, $can('analytics.view', 'analytics.team')),
+        ]);
         $this->appendGroup($groups, 'Observabilidad', [
             $this->item('🔁', 'Replay Center', 'admin/integration/events', 'admin/integration/events', true, $can('replay.view')),
             $this->item('💙', 'Channel Events', 'admin/messenger/events', 'admin/messenger/events', true, $can('integration.view')),
