@@ -6,17 +6,23 @@ namespace Modules\Publication\Controllers;
 
 use App\Controllers\BaseController;
 use CodeIgniter\Exceptions\PageNotFoundException;
+use Modules\Publication\Application\PublicationListQueryService;
 
 final class PublicationsController extends BaseController
 {
     public function index()
     {
-        $limit = (int) ($this->request->getGet('limit') ?: 100);
+        $search = trim((string) $this->request->getGet('q'));
+        $page = max(1, (int) ($this->request->getGet('page') ?: 1));
+        $perPage = (int) ($this->request->getGet('per_page') ?: 25);
+        $result = (new PublicationListQueryService())->paginate($search, $page, $perPage);
 
         return view('Modules\Publication\Views\index', [
             'title' => 'Publication Center',
-            'publications' => service('publicationProfile')->publications($limit),
-            'limit' => max(1, min($limit, 200)),
+            'publications' => $result['items'],
+            'pagination' => $result,
+            'search' => $search,
+            'perPage' => $result['perPage'],
         ]);
     }
 
