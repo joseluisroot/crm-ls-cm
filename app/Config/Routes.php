@@ -63,6 +63,7 @@ $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
     $routes->post('notifications/(:num)/read', '\Modules\Notification\Controllers\NotificationsController::markAsRead/$1');
     $routes->get('analytics', '\Modules\Analytics\Controllers\AnalyticsController::index');
     $routes->get('analytics/data', '\Modules\Analytics\Controllers\AnalyticsController::data');
+    $routes->get('performance', '\Modules\Operations\Controllers\CitizenPerformanceController::index');
     $routes->get('engagement', '\Modules\Engagement\Controllers\EngagementCenterController::index');
     $routes->get('engagement/participants', '\Modules\Engagement\Controllers\EngagementCenterController::participants');
     $routes->get('publications', '\Modules\Publication\Controllers\PublicationsController::index');
