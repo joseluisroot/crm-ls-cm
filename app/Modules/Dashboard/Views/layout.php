@@ -95,11 +95,11 @@ document.addEventListener('DOMContentLoaded', () => {
         lockForm(form, submitter);
         showLoading(submitter?.dataset.loading || form.dataset.loading || 'Procesando...');
 
-        if (submitter?.formAction) {
+        if (submitter?.hasAttribute('formaction')) {
             form.action = submitter.formAction;
         }
 
-        if (submitter?.formMethod) {
+        if (submitter?.hasAttribute('formmethod')) {
             form.method = submitter.formMethod;
         }
 
