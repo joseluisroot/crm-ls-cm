@@ -34,6 +34,8 @@ class CitizensController extends BaseController
         }
 
         $total = $model->countAllResults(false);
+        $pageCount = max(1, (int) ceil($total / $perPage));
+        $page = min($page, $pageCount);
         $citizens = $model->orderBy('created_at', 'DESC')->paginate($perPage, 'default', $page);
 
         return view('Modules\Citizens\Views\index', [
@@ -46,7 +48,7 @@ class CitizensController extends BaseController
             ],
             'total' => $total,
             'page' => $page,
-            'pageCount' => max(1, (int) ceil($total / $perPage)),
+            'pageCount' => $pageCount,
             'from' => $total === 0 ? 0 : (($page - 1) * $perPage) + 1,
             'to' => min($page * $perPage, $total),
         ]);
