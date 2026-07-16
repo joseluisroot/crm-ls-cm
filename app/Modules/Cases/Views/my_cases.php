@@ -2,80 +2,126 @@
 
 <?= $this->section('content') ?>
 
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+<?php
+$buildPageUrl = static function (int $targetPage) use ($filters): string {
+    return site_url('admin/my-cases') . '?' . http_build_query([
+        'q' => $filters['q'],
+        'status' => $filters['status'],
+        'priority' => $filters['priority'],
+        'per_page' => $filters['per_page'],
+        'page' => $targetPage,
+    ]);
+};
+$firstVisiblePage = max(1, $page - 2);
+$lastVisiblePage = min($pageCount, $page + 2);
+$priorityClasses = [
+    'high' => 'ciac-badge--danger',
+    'urgent' => 'ciac-badge--danger',
+    'medium' => 'ciac-badge--warning',
+    'normal' => 'ciac-badge--info',
+    'low' => 'ciac-badge--neutral',
+];
+?>
+
+<section class="ciac-card mb-6">
+    <div class="ciac-card__body">
+        <form method="get" action="<?= site_url('admin/my-cases') ?>" class="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_200px_180px_150px_auto] xl:items-end">
+            <div>
+                <label for="case-search" class="ciac-label">Buscar caso</label>
+                <input id="case-search" name="q" value="<?= esc($filters['q']) ?>" class="ciac-field" placeholder="Código, título, ciudadano o categoría">
+            </div>
+            <div>
+                <label for="case-status" class="ciac-label">Estado</label>
+                <select id="case-status" name="status" class="ciac-select">
+                    <option value="">Todos</option>
+                    <?php foreach ($statuses as $status): ?>
+                        <option value="<?= esc($status['slug']) ?>" <?= $filters['status'] === $status['slug'] ? 'selected' : '' ?>><?= esc($status['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div>
+                <label for="case-priority" class="ciac-label">Prioridad</label>
+                <select id="case-priority" name="priority" class="ciac-select">
+                    <option value="">Todas</option>
+                    <?php foreach (['urgent' => 'Urgente', 'high' => 'Alta', 'medium' => 'Media', 'normal' => 'Normal', 'low' => 'Baja'] as $value => $label): ?>
+                        <option value="<?= $value ?>" <?= $filters['priority'] === $value ? 'selected' : '' ?>><?= $label ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div>
+                <label for="case-per-page" class="ciac-label">Registros</label>
+                <select id="case-per-page" name="per_page" class="ciac-select">
+                    <?php foreach ([10, 20, 50, 100] as $size): ?>
+                        <option value="<?= $size ?>" <?= (int) $filters['per_page'] === $size ? 'selected' : '' ?>><?= $size ?> por página</option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="ciac-actions xl:justify-end">
+                <button class="ciac-btn ciac-btn--primary" data-loading="Buscando casos...">Buscar</button>
+                <a href="<?= site_url('admin/my-cases') ?>" class="ciac-btn ciac-btn--outline">Limpiar</a>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section class="ciac-card overflow-hidden">
+    <header class="ciac-card__header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <h1 class="text-3xl font-black text-slate-900">
-                Mis casos asignados
-            </h1>
-
-            <p class="text-slate-500 mt-2">
-                Casos que requieren tu revisión, atención o seguimiento.
-            </p>
+            <p class="ciac-page-eyebrow">Bandeja personal</p>
+            <h2 class="ciac-card__title mt-2">Mis casos asignados</h2>
+            <p class="ciac-card__subtitle">Mostrando <?= $from ?>–<?= $to ?> de <?= $total ?> casos.</p>
         </div>
+        <span class="ciac-badge ciac-badge--primary"><?= $total ?> casos</span>
+    </header>
 
-        <div class="bg-pink-50 text-pink-700 rounded-2xl px-5 py-3">
-        <span class="font-black text-xl">
-            <?= count($cases) ?>
-        </span>
-            <span class="text-sm ml-1">
-            casos
-        </span>
+    <?php if (empty($cases)): ?>
+        <div class="ciac-empty-state">
+            <div class="ciac-empty-state__icon">✅</div>
+            <h3 class="ciac-empty-state__title">No tienes casos pendientes con estos filtros</h3>
+            <p class="ciac-empty-state__description">Los nuevos casos asignados aparecerán aquí. También puedes limpiar los filtros para revisar toda tu bandeja.</p>
+            <a href="<?= site_url('admin/my-cases') ?>" class="ciac-btn ciac-btn--outline mt-5">Limpiar filtros</a>
         </div>
-    </div>
-
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <?php if (empty($cases)): ?>
-            <div class="p-10 text-center">
-                <div class="text-4xl mb-4">✅</div>
-
-                <h3 class="font-bold text-slate-900">
-                    No tienes casos asignados
-                </h3>
-
-                <p class="text-slate-500 mt-2">
-                    Los nuevos casos asignados aparecerán aquí.
-                </p>
-            </div>
-        <?php else: ?>
-            <div class="divide-y divide-slate-100">
+    <?php else: ?>
+        <div class="overflow-x-auto">
+            <table class="ciac-table min-w-[980px]">
+                <thead><tr><th>Caso</th><th>Ciudadano</th><th>Categoría</th><th>Prioridad</th><th>Estado</th><th>Actualizado</th><th class="text-right">Acción</th></tr></thead>
+                <tbody>
                 <?php foreach ($cases as $case): ?>
-                    <div class="p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-                        <div>
-                            <div class="flex flex-wrap items-center gap-3">
-                            <span class="text-xs font-bold px-3 py-1 rounded-full bg-pink-100 text-pink-700">
-                                <?= esc($case['public_code'] ?? '#' . $case['id']) ?>
-                            </span>
-
-                                <span class="text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-600">
-                                <?= esc($case['status_name']) ?>
-                            </span>
-                            </div>
-
-                            <h3 class="font-bold text-slate-900 mt-3">
-                                <?= esc($case['title']) ?>
-                            </h3>
-
-                            <p class="text-sm text-slate-500 mt-1">
-                                Ciudadano:
-                                <?= esc($case['citizen_name']) ?>
-                            </p>
-
-                            <p class="text-sm text-slate-500">
-                                Categoría:
-                                <?= esc($case['category_name'] ?? 'Sin clasificar') ?>
-                            </p>
-                        </div>
-
-                        <a
-                            href="<?= site_url('admin/cases/' . $case['id']) ?>"
-                            class="inline-flex justify-center px-5 py-3 rounded-xl bg-slate-900 text-white font-semibold hover:bg-slate-800"
-                        >
-                            Gestionar caso
-                        </a>
-                    </div>
+                    <?php $priority = strtolower((string) ($case['priority'] ?? 'normal')); ?>
+                    <tr>
+                        <td>
+                            <div class="font-extrabold text-slate-900"><?= esc($case['title']) ?></div>
+                            <div class="mt-1 text-xs text-slate-400"><?= esc($case['public_code'] ?? '#' . $case['id']) ?></div>
+                        </td>
+                        <td><?= esc($case['citizen_name']) ?></td>
+                        <td><?= esc($case['category_name'] ?? 'Sin clasificar') ?></td>
+                        <td><span class="ciac-badge <?= $priorityClasses[$priority] ?? 'ciac-badge--neutral' ?>"><?= esc(ucfirst($priority)) ?></span></td>
+                        <td><span class="ciac-badge ciac-badge--neutral"><?= esc($case['status_name']) ?></span></td>
+                        <td><?= esc($case['updated_at'] ?? $case['created_at'] ?? '-') ?></td>
+                        <td class="text-right"><a href="<?= site_url('admin/cases/' . $case['id']) ?>" class="ciac-btn ciac-btn--primary ciac-btn--sm">Gestionar →</a></td>
+                    </tr>
                 <?php endforeach; ?>
-            </div>
+                </tbody>
+            </table>
+        </div>
+
+        <?php if ($pageCount > 1): ?>
+            <footer class="ciac-card__footer flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <p class="text-sm text-slate-500">Página <?= $page ?> de <?= $pageCount ?></p>
+                <nav class="flex flex-wrap items-center gap-2" aria-label="Paginación de mis casos">
+                    <?php if ($page > 1): ?><a href="<?= esc($buildPageUrl($page - 1)) ?>" class="ciac-btn ciac-btn--outline ciac-btn--sm">← Anterior</a><?php endif; ?>
+                    <?php for ($current = $firstVisiblePage; $current <= $lastVisiblePage; $current++): ?>
+                        <a href="<?= esc($buildPageUrl($current)) ?>" class="ciac-btn ciac-btn--sm <?= $current === $page ? 'ciac-btn--primary' : 'ciac-btn--outline' ?>" aria-current="<?= $current === $page ? 'page' : 'false' ?>"><?= $current ?></a>
+                    <?php endfor; ?>
+                    <?php if ($page < $pageCount): ?><a href="<?= esc($buildPageUrl($page + 1)) ?>" class="ciac-btn ciac-btn--outline ciac-btn--sm">Siguiente →</a><?php endif; ?>
+                </nav>
+            </footer>
         <?php endif; ?>
-    </div>
+    <?php endif; ?>
+</section>
+
+<script>
+document.getElementById('case-per-page')?.addEventListener('change', (event) => event.target.form?.requestSubmit());
+</script>
 
 <?= $this->endSection() ?>
