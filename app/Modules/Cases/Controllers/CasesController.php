@@ -20,20 +20,87 @@ class CasesController extends BaseController
 {
     public function index()
     {
-        $caseModel = new CaseModel();
-        $builder = $caseModel->select('cases.*, citizens.name as citizen_name, categories.name as category_name, case_statuses.name as status_name')
-            ->join('citizens', 'citizens.id = cases.citizen_id')
-            ->join('categories', 'categories.id = cases.category_id', 'left')
-            ->join('case_statuses', 'case_statuses.id = cases.status_id');
+        $query = trim((string) $this->request->getGet('q'));
+        $status = trim((string) $this->request->getGet('status'));
+        $priority = trim((string) $this->request->getGet('priority'));
+        $assigned = trim((string) $this->request->getGet('assigned'));
+        $perPage = (int) $this->request->getGet('per_page');
+        $perPage = in_array($perPage, [10, 20, 50, 100], true) ? $perPage : 20;
+        $page = max(1, (int) ($this->request->getGet('page') ?: 1));
 
         $title = 'Casos';
+        $scopeIds = null;
         if (cannot('cases.view')) {
-            $ids = can('cases.view_team') ? (new TeamScopeService())->userIdsInScope($this->currentUserId()) : [$this->currentUserId()];
-            $builder->whereIn('cases.assigned_to', $ids);
+            $scopeIds = can('cases.view_team')
+                ? (new TeamScopeService())->userIdsInScope($this->currentUserId())
+                : [$this->currentUserId()];
             $title = can('cases.view_team') ? 'Casos de mi equipo' : 'Mis casos';
         }
 
-        return view('Modules\Cases\Views\index', ['title' => $title, 'cases' => $builder->orderBy('cases.created_at', 'DESC')->paginate(20), 'pager' => $caseModel->pager]);
+        $scopedModel = function (bool $withJoins = false) use ($scopeIds): CaseModel {
+            $model = new CaseModel();
+
+            if ($withJoins) {
+                $model->select('cases.*, citizens.name AS citizen_name, categories.name AS category_name, case_statuses.name AS status_name, case_statuses.slug AS status_slug, admin_users.name AS assigned_user_name')
+                    ->join('citizens', 'citizens.id = cases.citizen_id')
+                    ->join('categories', 'categories.id = cases.category_id', 'left')
+                    ->join('case_statuses', 'case_statuses.id = cases.status_id')
+                    ->join('admin_users', 'admin_users.id = COALESCE(cases.assigned_user_id, cases.assigned_to)', 'left');
+            }
+
+            if ($scopeIds !== null) {
+                $model->groupStart()
+                    ->whereIn('cases.assigned_user_id', $scopeIds)
+                    ->orWhereIn('cases.assigned_to', $scopeIds)
+                    ->groupEnd();
+            }
+
+            return $model;
+        };
+
+        $model = $scopedModel(true);
+        if ($query !== '') {
+            $model->groupStart()
+                ->like('cases.public_code', $query)
+                ->orLike('cases.title', $query)
+                ->orLike('citizens.name', $query)
+                ->orLike('categories.name', $query)
+                ->orLike('admin_users.name', $query)
+                ->groupEnd();
+        }
+        if ($status !== '') $model->where('case_statuses.slug', $status);
+        if ($priority !== '') $model->where('cases.priority', $priority);
+        if ($assigned === 'me') {
+            $model->groupStart()->where('cases.assigned_user_id', $this->currentUserId())->orWhere('cases.assigned_to', $this->currentUserId())->groupEnd();
+        } elseif ($assigned === 'unassigned') {
+            $model->where('cases.assigned_user_id', null)->where('cases.assigned_to', null);
+        }
+
+        $total = $model->countAllResults(false);
+        $pageCount = max(1, (int) ceil($total / $perPage));
+        $page = min($page, $pageCount);
+
+        $summary = [
+            'total' => $scopedModel()->countAllResults(),
+            'open' => $scopedModel()->where('cases.closed_at', null)->countAllResults(),
+            'high' => $scopedModel()->whereIn('cases.priority', ['HIGH', 'CRITICAL', 'high', 'critical'])->where('cases.closed_at', null)->countAllResults(),
+            'mine' => $scopedModel()->groupStart()->where('cases.assigned_user_id', $this->currentUserId())->orWhere('cases.assigned_to', $this->currentUserId())->groupEnd()->countAllResults(),
+            'unassigned' => $scopedModel()->where('cases.assigned_user_id', null)->where('cases.assigned_to', null)->countAllResults(),
+        ];
+
+        return view('Modules\Cases\Views\index', [
+            'title' => $title,
+            'cases' => $model->orderBy('cases.updated_at', 'DESC')->paginate($perPage, 'default', $page),
+            'pager' => $model->pager,
+            'statuses' => (new CaseStatusModel())->orderBy('id', 'ASC')->findAll(),
+            'summary' => $summary,
+            'filters' => ['q' => $query, 'status' => $status, 'priority' => $priority, 'assigned' => $assigned, 'per_page' => $perPage],
+            'total' => $total,
+            'page' => $page,
+            'pageCount' => $pageCount,
+            'from' => $total === 0 ? 0 : (($page - 1) * $perPage) + 1,
+            'to' => min($page * $perPage, $total),
+        ]);
     }
 
     public function create()
