@@ -1,20 +1,15 @@
 <?php
 
 namespace Modules\Operations\Controllers;
+
 use App\Controllers\BaseController;
 use CodeIgniter\Exceptions\PageNotFoundException;
 use Modules\Authorization\Application\OwnershipService;
 use Modules\Authorization\Application\TeamScopeService;
-use Modules\Cases\Presentation\Widgets\CaseWidget;
-use Modules\Citizen\Presentation\Widgets\CitizenWidget;
 use Modules\Core\UI\Widgets\WidgetContext;
-use Modules\Core\UI\Widgets\WidgetRenderer;
 use Modules\Operations\Application\OperationalQueueCatalog;
 use Modules\Operations\Application\SlaClockService;
-use Modules\Operations\Presentation\Widgets\ActivityWidget;
-use Modules\Operations\Presentation\Widgets\AssignmentWidget;
-use Modules\Operations\Presentation\Widgets\SlaWidget;
-use Modules\Operations\Presentation\Widgets\TimelineWidget;
+use Modules\Operations\Application\Workspace\WorkspaceBuilder;
 use Modules\Response\Application\QuickActionCatalog;
 use Modules\Response\Application\ResponseContextResolver;
 use Modules\Response\Application\ResponseDraftService;
@@ -34,43 +29,62 @@ final class OperationsController extends BaseController
         $query = service('operationsQueueQuery');
         $scopeUserIds = $this->scopeUserIds();
         $result = $query->paginate($group, $status, $priority, $search, $page, $perPage, $scopeUserIds);
-        return view('Modules\Operations\Views\index', ['title' => $this->scopeTitle(), 'summary' => $query->summary($scopeUserIds), 'items' => $result['items'], 'pagination' => $result, 'queues' => $catalog->all(), 'queue' => $group, 'statuses' => $query->statuses(), 'priorities' => $query->priorities(), 'status' => $status, 'priority' => $priority, 'search' => $search, 'perPage' => $result['perPage']]);
+
+        return view('Modules\Operations\Views\index', [
+            'title' => $this->scopeTitle(),
+            'summary' => $query->summary($scopeUserIds),
+            'items' => $result['items'],
+            'pagination' => $result,
+            'queues' => $catalog->all(),
+            'queue' => $group,
+            'statuses' => $query->statuses(),
+            'priorities' => $query->priorities(),
+            'status' => $status,
+            'priority' => $priority,
+            'search' => $search,
+            'perPage' => $result['perPage'],
+        ]);
     }
 
     public function show(int $id)
     {
         $this->requireAccess($id);
+
         $query = service('operationsDetailQuery');
         $item = $query->find($id);
-        if (! $item) throw PageNotFoundException::forPageNotFound('Work Item no encontrado.');
-        $context = new WidgetContext(viewerUserId: $this->currentUserId(), workItemId: $id, citizenId: (int) ($item['citizen_id'] ?? 0) ?: null, caseId: (int) ($item['case_id'] ?? 0) ?: null);
-        $renderer = new WidgetRenderer();
-        $citizenWidget = new CitizenWidget();
-        $timelineWidget = new TimelineWidget();
-        $slaWidget = new SlaWidget();
-        $caseWidget = new CaseWidget();
-        $assignmentWidget = new AssignmentWidget();
-        $activityWidget = new ActivityWidget();
+        if (! $item) {
+            throw PageNotFoundException::forPageNotFound('Work Item no encontrado.');
+        }
+
+        $context = new WidgetContext(
+            viewerUserId: $this->currentUserId(),
+            workItemId: $id,
+            citizenId: (int) ($item['citizen_id'] ?? 0) ?: null,
+            caseId: (int) ($item['case_id'] ?? 0) ?: null,
+            attributes: ['workItem' => $item],
+        );
+        $workspace = (new WorkspaceBuilder())->build($context);
+
         $catalog = new QuickActionCatalog();
         $authorName = $item['source']['author_name'] ?? $item['title'] ?? null;
         $channel = strtoupper((string) ($item['channel'] ?? ''));
-        $quickActions = array_map(static fn (array $action): array => $catalog->personalize($action, $authorName), $catalog->forChannel($channel));
+        $quickActions = array_map(
+            static fn (array $action): array => $catalog->personalize($action, $authorName),
+            $catalog->forChannel($channel),
+        );
         $db = db_connect();
-        return view('Modules\Operations\Views\show', [
+
+        return view('Modules\Operations\Views\show', array_merge([
             'title' => 'Atención #' . $id,
             'item' => $item,
-            'citizenWidgetHtml' => $citizenWidget->supports($context) ? $renderer->render($citizenWidget->build($context)) : null,
-            'timelineWidgetHtml' => $timelineWidget->supports($context) ? $renderer->render($timelineWidget->build($context)) : null,
-            'slaWidgetHtml' => $slaWidget->supports($context) ? $renderer->render($slaWidget->build($context)) : null,
-            'caseWidgetHtml' => $caseWidget->supports($context) ? $renderer->render($caseWidget->build($context)) : null,
-            'assignmentWidgetHtml' => $assignmentWidget->supports($context) ? $renderer->render($assignmentWidget->build($context)) : null,
-            'activityWidgetHtml' => $activityWidget->supports($context) ? $renderer->render($activityWidget->build($context)) : null,
-            'users' => $this->assignableUsers($query), 'statuses' => $query->statuses(), 'priorities' => $query->priorities(),
+            'users' => $this->assignableUsers($query),
+            'statuses' => $query->statuses(),
+            'priorities' => $query->priorities(),
             'responseDraft' => (new ResponseDraftService($db))->findForWorkItem($id),
             'responseCapability' => (new ResponseContextResolver($db))->capability($id),
             'responses' => $db->table('citizen_responses')->where('work_item_id', $id)->orderBy('id', 'DESC')->get()->getResultArray(),
             'quickActions' => $quickActions,
-        ]);
+        ], $workspace->toViewData()));
     }
 
     public function importPending() { $count = service('facebookCommentWorkItemAdapter')->importPending(500); return redirect()->to(site_url('admin/operations?queue=PENDING'))->with('success', $count . ' comentarios fueron sincronizados con Citizen Operations.'); }
