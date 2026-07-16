@@ -39,7 +39,13 @@ $to = min($currentPage * $currentPerPage, $total);
               data-confirm-text="Se importarán los comentarios pendientes a Citizen Operations."
               data-loading="Sincronizando comentarios...">
             <?= csrf_field() ?>
-            <button class="ciac-btn ciac-btn--secondary">Sincronizar comentarios</button>
+            <button
+                type="submit"
+                formaction="<?= site_url('admin/operations/import-facebook-comments') ?>"
+                formmethod="post"
+                class="ciac-btn ciac-btn--secondary">
+                Sincronizar comentarios
+            </button>
         </form>
     <?php endif; ?>
 </div>

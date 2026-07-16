@@ -87,7 +87,16 @@ final class OperationsController extends BaseController
         ], $workspace->toViewData()));
     }
 
-    public function importPending() { $count = service('facebookCommentWorkItemAdapter')->importPending(500); return redirect()->to(site_url('admin/operations?queue=PENDING'))->with('success', $count . ' comentarios fueron sincronizados con Citizen Operations.'); }
+    public function importPending()
+    {
+        $count = service('facebookCommentWorkItemAdapter')->importPending(500);
+
+        return redirect()
+            ->to(site_url('admin/operations?queue=PENDING'))
+            ->setStatusCode(303)
+            ->with('success', $count . ' comentarios fueron sincronizados con Citizen Operations.');
+    }
+
     public function assign(int $id) { $userId = (int) $this->request->getPost('assigned_user_id'); if ($userId <= 0) return redirect()->back()->with('error', 'Selecciona un responsable válido.'); if (cannot('operations.view') && ! in_array($userId, (new TeamScopeService())->userIdsInScope($this->currentUserId()), true)) throw PageNotFoundException::forPageNotFound('Responsable fuera del alcance de tu equipo.'); return $this->execute(function () use ($id, $userId): void { service('citizenOperations')->assign($id, $userId); (new SlaClockService())->assigned($id, $userId); }, 'Atención asignada.'); }
     public function changeStatus(int $id) { $this->requireAction($id, 'operations.update'); $status = strtoupper(trim((string) $this->request->getPost('status'))); return $this->execute(function () use ($id, $status): void { service('citizenOperations')->changeStatus($id, $status); if (in_array($status, ['RESOLVED', 'CLOSED'], true)) (new SlaClockService())->resolved($id, $this->currentUserId() ?: null); }, 'Estado actualizado.'); }
     public function changePriority(int $id) { $this->requireAction($id, 'operations.update'); return $this->execute(fn () => service('citizenOperations')->changePriority($id, strtoupper(trim((string) $this->request->getPost('priority')))), 'Prioridad actualizada.'); }
