@@ -10,18 +10,58 @@ class ConversationsController extends BaseController
 {
     public function index()
     {
-        $conversationModel = new ConversationModel();
+        $query = trim((string) $this->request->getGet('q'));
+        $channel = trim((string) $this->request->getGet('channel'));
+        $status = trim((string) $this->request->getGet('status'));
+        $perPage = (int) $this->request->getGet('per_page');
+        $perPage = in_array($perPage, [10, 20, 50, 100], true) ? $perPage : 20;
+        $page = max(1, (int) ($this->request->getGet('page') ?? 1));
 
-        $conversations = $conversationModel
+        $conversationModel = new ConversationModel();
+        $conversationModel
             ->select('conversations.*, citizens.name as citizen_name, citizens.community, citizens.municipality')
-            ->join('citizens', 'citizens.id = conversations.citizen_id')
-            ->orderBy('last_message_at', 'DESC')
-            ->paginate(20);
+            ->join('citizens', 'citizens.id = conversations.citizen_id');
+
+        if ($query !== '') {
+            $conversationModel->groupStart()
+                ->like('citizens.name', $query)
+                ->orLike('citizens.municipality', $query)
+                ->orLike('citizens.community', $query)
+                ->orLike('conversations.channel', $query)
+                ->orLike('conversations.status', $query)
+                ->groupEnd();
+        }
+
+        if ($channel !== '') {
+            $conversationModel->where('conversations.channel', $channel);
+        }
+
+        if ($status !== '') {
+            $conversationModel->where('conversations.status', $status);
+        }
+
+        $total = $conversationModel->countAllResults(false);
+        $pageCount = max(1, (int) ceil($total / $perPage));
+        $page = min($page, $pageCount);
+        $conversations = $conversationModel
+            ->orderBy('conversations.last_message_at', 'DESC')
+            ->orderBy('conversations.created_at', 'DESC')
+            ->paginate($perPage, 'default', $page);
 
         return view('Modules\Conversations\Views\index', [
             'title' => 'Conversaciones',
             'conversations' => $conversations,
-            'pager' => $conversationModel->pager,
+            'filters' => [
+                'q' => $query,
+                'channel' => $channel,
+                'status' => $status,
+                'per_page' => $perPage,
+            ],
+            'total' => $total,
+            'page' => $page,
+            'pageCount' => $pageCount,
+            'from' => $total === 0 ? 0 : (($page - 1) * $perPage) + 1,
+            'to' => min($page * $perPage, $total),
         ]);
     }
 
@@ -35,7 +75,7 @@ class ConversationsController extends BaseController
             ->where('conversations.id', $id)
             ->first();
 
-        if (!$conversation) {
+        if (! $conversation) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Conversación no encontrada');
         }
 
@@ -48,5 +88,4 @@ class ConversationsController extends BaseController
                 ->findAll(),
         ]);
     }
-
 }
