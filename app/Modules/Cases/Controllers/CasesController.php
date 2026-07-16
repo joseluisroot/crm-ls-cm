@@ -110,7 +110,41 @@ class CasesController extends BaseController
 
     public function myCases()
     {
-        return view('Modules\Cases\Views\my_cases', ['title' => 'Mis casos asignados', 'cases' => (new AssignmentEngineService())->getUserCases($this->currentUserId())]);
+        $query = trim((string) $this->request->getGet('q'));
+        $status = trim((string) $this->request->getGet('status'));
+        $priority = trim((string) $this->request->getGet('priority'));
+        $perPage = (int) $this->request->getGet('per_page');
+        $perPage = in_array($perPage, [10, 20, 50, 100], true) ? $perPage : 20;
+        $page = max(1, (int) ($this->request->getGet('page') ?? 1));
+
+        $model = (new CaseModel())
+            ->select('cases.*, case_statuses.name AS status_name, case_statuses.slug AS status_slug, categories.name AS category_name, citizens.name AS citizen_name')
+            ->join('case_statuses', 'case_statuses.id = cases.status_id')
+            ->join('categories', 'categories.id = cases.category_id', 'left')
+            ->join('citizens', 'citizens.id = cases.citizen_id')
+            ->where('cases.assigned_user_id', $this->currentUserId());
+
+        if ($query !== '') {
+            $model->groupStart()->like('cases.title', $query)->orLike('cases.public_code', $query)->orLike('citizens.name', $query)->orLike('categories.name', $query)->groupEnd();
+        }
+        if ($status !== '') $model->where('case_statuses.slug', $status);
+        if ($priority !== '') $model->where('cases.priority', $priority);
+
+        $total = $model->countAllResults(false);
+        $pageCount = max(1, (int) ceil($total / $perPage));
+        $page = min($page, $pageCount);
+
+        return view('Modules\Cases\Views\my_cases', [
+            'title' => 'Mis casos asignados',
+            'cases' => $model->orderBy('cases.updated_at', 'DESC')->paginate($perPage, 'default', $page),
+            'statuses' => (new CaseStatusModel())->orderBy('id', 'ASC')->findAll(),
+            'filters' => ['q' => $query, 'status' => $status, 'priority' => $priority, 'per_page' => $perPage],
+            'total' => $total,
+            'page' => $page,
+            'pageCount' => $pageCount,
+            'from' => $total === 0 ? 0 : (($page - 1) * $perPage) + 1,
+            'to' => min($page * $perPage, $total),
+        ]);
     }
 
     private function assignableUsers(): array
