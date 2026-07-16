@@ -35,6 +35,8 @@ $navClass = static function (string $path, bool $prefix = false) use ($currentPa
 };
 $successMessage = session()->getFlashdata('success');
 $errorMessage = session()->getFlashdata('error');
+$warningMessage = session()->getFlashdata('warning');
+$infoMessage = session()->getFlashdata('info');
 ?>
 
 <body class="bg-slate-100 text-slate-800" style="font-family: 'Inter', sans-serif;">
@@ -53,39 +55,130 @@ $errorMessage = session()->getFlashdata('error');
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const success = <?= json_encode($successMessage, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
-    const error = <?= json_encode($errorMessage, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
-    if (success) Swal.fire({icon: 'success', title: 'Listo', text: success, confirmButtonColor: '#db2777'});
-    if (error) Swal.fire({icon: 'error', title: 'No fue posible completar la acción', text: error, confirmButtonColor: '#db2777'});
+    const palette = {
+        primary: '#db2777',
+        secondary: '#64748b',
+        danger: '#dc2626'
+    };
 
-    document.querySelectorAll('form[data-confirm]').forEach((form) => {
-        form.addEventListener('submit', async (event) => {
-            if (form.dataset.confirmed === '1') return;
-            event.preventDefault();
-            const result = await Swal.fire({
-                icon: 'question',
-                title: form.dataset.confirm || '¿Deseas continuar?',
-                text: form.dataset.confirmText || '',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, continuar',
-                cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#db2777',
-                cancelButtonColor: '#64748b'
-            });
-            if (!result.isConfirmed) return;
-            form.dataset.confirmed = '1';
-            showLoading(form.dataset.loading || 'Procesando...');
-            form.submit();
+    const flashMessages = [
+        {icon: 'success', title: 'Acción completada', text: <?= json_encode($successMessage, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>},
+        {icon: 'error', title: 'No fue posible completar la acción', text: <?= json_encode($errorMessage, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>},
+        {icon: 'warning', title: 'Atención', text: <?= json_encode($warningMessage, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>},
+        {icon: 'info', title: 'Información', text: <?= json_encode($infoMessage, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>}
+    ];
+
+    const showLoading = (message = 'Procesando...') => Swal.fire({
+        title: message,
+        text: 'Espera un momento mientras CIAC completa la operación.',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    const lockForm = (form, submitter = null) => {
+        form.dataset.submitting = '1';
+        form.setAttribute('aria-busy', 'true');
+
+        form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach((control) => {
+            control.disabled = true;
+            control.setAttribute('aria-disabled', 'true');
         });
+
+        if (submitter) {
+            submitter.dataset.originalText = submitter.dataset.originalText || submitter.textContent.trim();
+        }
+    };
+
+    const submitForm = (form, submitter) => {
+        lockForm(form, submitter);
+        showLoading(submitter?.dataset.loading || form.dataset.loading || 'Procesando...');
+
+        if (submitter?.formAction) {
+            form.action = submitter.formAction;
+        }
+
+        if (submitter?.formMethod) {
+            form.method = submitter.formMethod;
+        }
+
+        form.submit();
+    };
+
+    window.CIACAlerts = {
+        loading: showLoading,
+        success: (text, title = 'Acción completada') => Swal.fire({icon: 'success', title, text, confirmButtonColor: palette.primary}),
+        error: (text, title = 'No fue posible completar la acción') => Swal.fire({icon: 'error', title, text, confirmButtonColor: palette.primary}),
+        warning: (text, title = 'Atención') => Swal.fire({icon: 'warning', title, text, confirmButtonColor: palette.primary})
+    };
+
+    flashMessages.find((message) => Boolean(message.text)) && (() => {
+        const message = flashMessages.find((item) => Boolean(item.text));
+        Swal.fire({...message, confirmButtonText: 'Aceptar', confirmButtonColor: palette.primary});
+    })();
+
+    document.addEventListener('submit', async (event) => {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement)) return;
+
+        const submitter = event.submitter;
+        const confirmMessage = submitter?.dataset.confirm || form.dataset.confirm;
+        const loadingMessage = submitter?.dataset.loading || form.dataset.loading;
+
+        if (!confirmMessage && !loadingMessage) return;
+
+        event.preventDefault();
+
+        if (form.dataset.submitting === '1') return;
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        if (confirmMessage) {
+            const isDanger = (submitter?.dataset.confirmType || form.dataset.confirmType) === 'danger';
+            const result = await Swal.fire({
+                icon: isDanger ? 'warning' : 'question',
+                title: confirmMessage,
+                text: submitter?.dataset.confirmText || form.dataset.confirmText || '',
+                showCancelButton: true,
+                reverseButtons: true,
+                focusCancel: isDanger,
+                confirmButtonText: submitter?.dataset.confirmButton || form.dataset.confirmButton || (isDanger ? 'Sí, continuar' : 'Confirmar'),
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: isDanger ? palette.danger : palette.primary,
+                cancelButtonColor: palette.secondary
+            });
+
+            if (!result.isConfirmed) return;
+        }
+
+        submitForm(form, submitter);
     });
 
-    document.querySelectorAll('form[data-loading]:not([data-confirm])').forEach((form) => {
-        form.addEventListener('submit', () => showLoading(form.dataset.loading || 'Procesando...'));
-    });
+    document.addEventListener('click', async (event) => {
+        const link = event.target.closest('a[data-confirm]');
+        if (!link) return;
 
-    function showLoading(message) {
-        Swal.fire({title: message, allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
-    }
+        event.preventDefault();
+        const isDanger = link.dataset.confirmType === 'danger';
+        const result = await Swal.fire({
+            icon: isDanger ? 'warning' : 'question',
+            title: link.dataset.confirm || '¿Deseas continuar?',
+            text: link.dataset.confirmText || '',
+            showCancelButton: true,
+            reverseButtons: true,
+            confirmButtonText: link.dataset.confirmButton || 'Confirmar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: isDanger ? palette.danger : palette.primary,
+            cancelButtonColor: palette.secondary
+        });
+
+        if (!result.isConfirmed) return;
+        showLoading(link.dataset.loading || 'Procesando...');
+        window.location.assign(link.href);
+    });
 });
 </script>
 <?= $this->renderSection('scripts') ?>
