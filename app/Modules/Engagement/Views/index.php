@@ -2,106 +2,182 @@
 
 <?= $this->section('content') ?>
 
-<div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5 mb-8">
+<?php
+$total = (int) ($pagination['total'] ?? count($comments));
+$currentPage = (int) ($pagination['page'] ?? 1);
+$currentPerPage = (int) ($pagination['perPage'] ?? $perPage ?? 25);
+$from = $total === 0 ? 0 : (($currentPage - 1) * $currentPerPage) + 1;
+$to = min($currentPage * $currentPerPage, $total);
+$statusLabels = [
+    'new' => 'Nuevo',
+    'responded' => 'Respondido',
+    'closed' => 'Cerrado',
+    'removed' => 'Eliminado',
+];
+$statusTones = [
+    'new' => 'ciac-badge--warning',
+    'responded' => 'ciac-badge--success',
+    'closed' => 'ciac-badge--neutral',
+    'removed' => 'ciac-badge--danger',
+];
+?>
+
+<div class="ciac-page-header xl:flex-row xl:items-center xl:justify-between">
     <div>
-        <p class="text-sm font-bold uppercase tracking-widest text-pink-600">Public Engagement Engine</p>
-        <h1 class="text-3xl font-black text-slate-900 mt-2">Centro de interacciones públicas</h1>
-        <p class="text-slate-500 mt-2">Comentarios, reacciones y participación ciudadana en publicaciones.</p>
+        <p class="ciac-page-eyebrow">Public Engagement Engine</p>
+        <h1 class="ciac-page-title mt-2">Centro de interacciones públicas</h1>
+        <p class="ciac-page-description">Comentarios, reacciones y participación ciudadana en publicaciones.</p>
     </div>
-    <a href="<?= site_url('admin/engagement/participants') ?>" class="px-5 py-3 rounded-xl bg-slate-950 text-white font-bold hover:bg-pink-600 transition">Ver participación ciudadana</a>
+    <a href="<?= site_url('admin/engagement/participants') ?>" class="ciac-btn ciac-btn--secondary">Ver participación ciudadana</a>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+<div class="grid grid-cols-1 gap-5 mb-8 md:grid-cols-2 xl:grid-cols-4">
     <?php foreach ([
-        ['label' => 'Publicaciones', 'value' => $summary['posts'], 'tone' => 'text-blue-700 bg-blue-50'],
-        ['label' => 'Comentarios', 'value' => $summary['comments'], 'tone' => 'text-violet-700 bg-violet-50'],
-        ['label' => 'Pendientes', 'value' => $summary['pending_comments'], 'tone' => 'text-amber-700 bg-amber-50'],
-        ['label' => 'Reacciones activas', 'value' => $summary['active_reactions'], 'tone' => 'text-pink-700 bg-pink-50'],
+        ['label' => 'Publicaciones', 'value' => $summary['posts'], 'badge' => 'ciac-badge--info'],
+        ['label' => 'Comentarios', 'value' => $summary['comments'], 'badge' => 'ciac-badge--neutral'],
+        ['label' => 'Pendientes', 'value' => $summary['pending_comments'], 'badge' => 'ciac-badge--warning'],
+        ['label' => 'Reacciones activas', 'value' => $summary['active_reactions'], 'badge' => 'ciac-badge--primary'],
     ] as $card): ?>
-        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <span class="inline-flex px-3 py-1 rounded-full text-xs font-bold <?= $card['tone'] ?>"><?= esc($card['label']) ?></span>
-            <p class="text-4xl font-black text-slate-900 mt-4"><?= esc($card['value']) ?></p>
-        </div>
+        <article class="ciac-card p-6">
+            <span class="ciac-badge <?= $card['badge'] ?>"><?= esc($card['label']) ?></span>
+            <p class="mt-4 text-4xl font-black text-slate-900"><?= esc($card['value']) ?></p>
+        </article>
     <?php endforeach; ?>
 </div>
 
-<div class="grid grid-cols-1 2xl:grid-cols-3 gap-6">
-    <section class="2xl:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-        <div class="p-6 border-b border-slate-200 flex flex-col gap-5">
-            <div>
-                <h2 class="text-xl font-black text-slate-900">Bandeja de comentarios</h2>
-                <p class="text-sm text-slate-500 mt-1">Interacciones públicas que pueden requerir atención.</p>
-            </div>
-            <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <input type="search" name="q" value="<?= esc($search) ?>" placeholder="Buscar persona o comentario..." class="md:col-span-2 rounded-xl border border-slate-300 px-4 py-3 bg-white">
-                <select name="status" class="rounded-xl border border-slate-300 px-4 py-3 bg-white">
-                    <option value="">Todos los estados</option>
-                    <?php foreach (['new', 'responded', 'closed', 'removed'] as $option): ?>
-                        <option value="<?= esc($option) ?>" <?= $status === $option ? 'selected' : '' ?>><?= esc(ucfirst($option)) ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <select name="per_page" class="rounded-xl border border-slate-300 px-4 py-3 bg-white">
-                    <?php foreach ([10, 25, 50, 100] as $option): ?>
-                        <option value="<?= $option ?>" <?= $perPage === $option ? 'selected' : '' ?>><?= $option ?> por página</option>
-                    <?php endforeach; ?>
-                </select>
-                <div class="md:col-span-4 flex flex-wrap gap-3 justify-end">
-                    <?php if ($status !== '' || $search !== ''): ?><a href="<?= site_url('admin/engagement') ?>" class="px-4 py-2 rounded-xl border border-slate-300 bg-white text-slate-700 font-bold">Limpiar</a><?php endif; ?>
-                    <button class="px-5 py-2 rounded-xl bg-pink-600 text-white font-bold">Aplicar filtros</button>
+<div class="grid grid-cols-1 gap-6 2xl:grid-cols-3">
+    <section class="ciac-card overflow-hidden 2xl:col-span-2">
+        <header class="ciac-card__header">
+            <div class="flex flex-col gap-5">
+                <div>
+                    <p class="ciac-page-eyebrow">Bandeja pública</p>
+                    <h2 class="ciac-card__title mt-2">Bandeja de comentarios</h2>
+                    <p class="ciac-card__subtitle">Interacciones públicas que pueden requerir atención.</p>
+                    <p class="mt-2 text-xs font-semibold text-slate-400">Mostrando <?= $from ?>–<?= $to ?> de <?= $total ?> comentarios.</p>
                 </div>
-            </form>
-        </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead class="bg-slate-50 text-xs uppercase tracking-widest text-slate-500">
-                    <tr><th class="px-6 py-4">Persona y comentario</th><th class="px-6 py-4">Estado</th><th class="px-6 py-4">Publicación</th><th class="px-6 py-4">Fecha</th></tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
+                <form method="get" class="grid grid-cols-1 gap-3 md:grid-cols-4" data-loading="Aplicando filtros...">
+                    <div class="md:col-span-2">
+                        <label for="engagement-search" class="ciac-label">Buscar</label>
+                        <input id="engagement-search" type="search" name="q" value="<?= esc($search) ?>" placeholder="Persona, comentario o publicación" class="ciac-field">
+                    </div>
+                    <div>
+                        <label for="engagement-status" class="ciac-label">Estado</label>
+                        <select id="engagement-status" name="status" class="ciac-select">
+                            <option value="">Todos los estados</option>
+                            <?php foreach ($statusLabels as $value => $label): ?>
+                                <option value="<?= esc($value) ?>" <?= $status === $value ? 'selected' : '' ?>><?= esc($label) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="engagement-per-page" class="ciac-label">Registros</label>
+                        <select id="engagement-per-page" name="per_page" class="ciac-select" onchange="this.form.submit()">
+                            <?php foreach ([10, 25, 50, 100] as $option): ?>
+                                <option value="<?= $option ?>" <?= $perPage === $option ? 'selected' : '' ?>><?= $option ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="flex flex-wrap justify-end gap-3 md:col-span-4">
+                        <?php if ($status !== '' || $search !== ''): ?>
+                            <a href="<?= site_url('admin/engagement') ?>" class="ciac-btn ciac-btn--outline">Limpiar</a>
+                        <?php endif; ?>
+                        <button class="ciac-btn ciac-btn--primary">Aplicar filtros</button>
+                    </div>
+                </form>
+            </div>
+        </header>
+
+        <?php if (empty($comments)): ?>
+            <div class="ciac-empty-state">
+                <div class="ciac-empty-state__icon">💬</div>
+                <h3 class="ciac-empty-state__title">No se encontraron comentarios</h3>
+                <p class="ciac-empty-state__description">Prueba ajustando la búsqueda o el estado seleccionado.</p>
+                <a href="<?= site_url('admin/engagement') ?>" class="ciac-btn ciac-btn--outline mt-5">Limpiar filtros</a>
+            </div>
+        <?php else: ?>
+            <div class="overflow-x-auto">
+                <table class="ciac-table min-w-[900px]">
+                    <thead>
+                    <tr>
+                        <th>Persona y comentario</th>
+                        <th>Estado</th>
+                        <th>Publicación</th>
+                        <th>Fecha</th>
+                    </tr>
+                    </thead>
+                    <tbody>
                     <?php foreach ($comments as $comment): ?>
-                        <tr class="hover:bg-slate-50/80 transition">
-                            <td class="px-6 py-5 min-w-[24rem]">
+                        <?php $commentStatus = (string) ($comment['status'] ?? 'new'); ?>
+                        <tr>
+                            <td class="min-w-[24rem]">
                                 <p class="font-black text-slate-900"><?= esc($comment['author_name'] ?: 'Usuario de Facebook') ?></p>
-                                <p class="text-sm text-slate-600 mt-2 whitespace-pre-line line-clamp-3"><?= esc($comment['message'] ?: 'Comentario sin texto disponible.') ?></p>
+                                <p class="mt-2 text-sm text-slate-600 whitespace-pre-line line-clamp-3"><?= esc($comment['message'] ?: 'Comentario sin texto disponible.') ?></p>
                             </td>
-                            <td class="px-6 py-5">
+                            <td>
                                 <div class="flex flex-col items-start gap-2">
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700"><?= esc($comment['status']) ?></span>
-                                    <?php if ((int) $comment['requires_response'] === 1): ?><span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">Requiere atención</span><?php endif; ?>
+                                    <span class="ciac-badge <?= $statusTones[$commentStatus] ?? 'ciac-badge--neutral' ?>"><?= esc($statusLabels[$commentStatus] ?? ucfirst($commentStatus)) ?></span>
+                                    <?php if ((int) $comment['requires_response'] === 1): ?>
+                                        <span class="ciac-badge ciac-badge--warning">Requiere atención</span>
+                                    <?php endif; ?>
                                 </div>
                             </td>
-                            <td class="px-6 py-5 max-w-sm text-sm text-slate-500"><p class="line-clamp-2"><?= esc($comment['post_message'] ?: $comment['external_post_id']) ?></p></td>
-                            <td class="px-6 py-5 text-sm text-slate-500 whitespace-nowrap"><?= esc($comment['commented_at'] ?: $comment['created_at']) ?></td>
+                            <td class="max-w-sm text-sm text-slate-500"><p class="line-clamp-2"><?= esc($comment['post_message'] ?: $comment['external_post_id']) ?></p></td>
+                            <td class="text-sm text-slate-500 whitespace-nowrap"><?= esc($comment['commented_at'] ?: $comment['created_at']) ?></td>
                         </tr>
                     <?php endforeach; ?>
-                    <?php if (empty($comments)): ?><tr><td colspan="4" class="px-6 py-14 text-center text-slate-500">No se encontraron comentarios con los filtros seleccionados.</td></tr><?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-        <?= view('Modules\Shared\Views\components\pagination', ['pagination' => $pagination]) ?>
+                    </tbody>
+                </table>
+            </div>
+            <?= view('Modules\Shared\Views\components\pagination', ['pagination' => $pagination]) ?>
+        <?php endif; ?>
     </section>
 
     <aside class="space-y-6">
-        <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <h2 class="text-xl font-black text-slate-900">Reacciones recientes</h2>
-            <div class="mt-5 space-y-4">
+        <section class="ciac-card">
+            <header class="ciac-card__header">
+                <h2 class="ciac-card__title">Reacciones recientes</h2>
+                <p class="ciac-card__subtitle">Actividad más reciente sobre publicaciones.</p>
+            </header>
+            <div class="ciac-card__body space-y-4">
                 <?php foreach ($reactions as $reaction): ?>
                     <div class="border-b border-slate-100 pb-4 last:border-0 last:pb-0">
-                        <div class="flex items-center justify-between gap-3"><p class="font-bold text-slate-800"><?= esc($reaction['actor_name'] ?: 'Usuario de Facebook') ?></p><span class="px-3 py-1 rounded-full bg-pink-50 text-pink-700 text-xs font-black"><?= esc($reaction['reaction_type']) ?></span></div>
-                        <p class="text-sm text-slate-500 mt-2 line-clamp-2"><?= esc($reaction['post_message'] ?: $reaction['external_post_id']) ?></p>
+                        <div class="flex items-center justify-between gap-3">
+                            <p class="font-bold text-slate-800"><?= esc($reaction['actor_name'] ?: 'Usuario de Facebook') ?></p>
+                            <span class="ciac-badge ciac-badge--primary"><?= esc($reaction['reaction_type']) ?></span>
+                        </div>
+                        <p class="mt-2 text-sm text-slate-500 line-clamp-2"><?= esc($reaction['post_message'] ?: $reaction['external_post_id']) ?></p>
                     </div>
                 <?php endforeach; ?>
-                <?php if (empty($reactions)): ?><p class="text-slate-500">Todavía no existen reacciones registradas.</p><?php endif; ?>
+                <?php if (empty($reactions)): ?>
+                    <div class="ciac-empty-state py-8">
+                        <p class="ciac-empty-state__description">Todavía no existen reacciones registradas.</p>
+                    </div>
+                <?php endif; ?>
             </div>
         </section>
 
-        <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <h2 class="text-xl font-black text-slate-900">Personas más activas</h2>
-            <div class="mt-5 space-y-4">
+        <section class="ciac-card">
+            <header class="ciac-card__header">
+                <h2 class="ciac-card__title">Personas más activas</h2>
+                <p class="ciac-card__subtitle">Participantes con mayor interacción acumulada.</p>
+            </header>
+            <div class="ciac-card__body space-y-4">
                 <?php foreach ($participants as $index => $person): ?>
-                    <div class="flex items-center gap-4"><div class="w-9 h-9 rounded-full bg-slate-950 text-white flex items-center justify-center font-black"><?= $index + 1 ?></div><div class="min-w-0 flex-1"><p class="font-bold text-slate-800 truncate"><?= esc($person['name']) ?></p><p class="text-xs text-slate-500"><?= esc($person['comments_count']) ?> comentarios · <?= esc($person['reactions_count']) ?> reacciones</p></div><span class="font-black text-pink-600"><?= esc($person['total_interactions']) ?></span></div>
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center justify-center w-9 h-9 rounded-full bg-slate-950 text-white font-black"><?= $index + 1 ?></div>
+                        <div class="min-w-0 flex-1">
+                            <p class="font-bold text-slate-800 truncate"><?= esc($person['name']) ?></p>
+                            <p class="text-xs text-slate-500"><?= esc($person['comments_count']) ?> comentarios · <?= esc($person['reactions_count']) ?> reacciones</p>
+                        </div>
+                        <span class="ciac-badge ciac-badge--primary"><?= esc($person['total_interactions']) ?></span>
+                    </div>
                 <?php endforeach; ?>
-                <?php if (empty($participants)): ?><p class="text-slate-500">Sin datos de participación todavía.</p><?php endif; ?>
+                <?php if (empty($participants)): ?>
+                    <div class="ciac-empty-state py-8">
+                        <p class="ciac-empty-state__description">Sin datos de participación todavía.</p>
+                    </div>
+                <?php endif; ?>
             </div>
         </section>
     </aside>
