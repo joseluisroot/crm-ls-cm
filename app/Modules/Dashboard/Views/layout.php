@@ -13,6 +13,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="<?= base_url('assets/css/ciac-design-system.css') ?>">
 
     <link rel="icon" type="image/svg+xml" href="<?= base_url('assets/favicon/ciac-icon.svg') ?>">
     <link rel="icon" type="image/png" sizes="32x32" href="<?= base_url('assets/favicon/favicon-32x32.png') ?>">
@@ -45,7 +46,7 @@ $errorMessage = session()->getFlashdata('error');
     </aside>
 
     <main class="flex-1 p-6 lg:p-10 min-w-0">
-        <header class="mb-10"><div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5"><div><p class="text-sm uppercase tracking-[0.20em] text-pink-600 font-bold">CIAC Platform · <?= esc($profile['label']) ?></p><h2 class="text-4xl font-black text-slate-900 mt-2"><?= esc($title ?? '') ?></h2><p class="text-slate-500 mt-2">Centro Inteligente de Atención Ciudadana</p></div><div class="bg-white border border-slate-200 rounded-2xl px-5 py-4 shadow-sm"><p class="text-xs uppercase tracking-widest text-slate-400">Experiencia activa</p><p class="font-bold text-slate-800 mt-1"><?= esc($profile['label']) ?></p></div></div></header>
+        <header class="mb-10"><div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5"><div><p class="ciac-page-eyebrow">CIAC Platform · <?= esc($profile['label']) ?></p><h2 class="ciac-page-title mt-2"><?= esc($title ?? '') ?></h2><p class="ciac-page-description">Centro Inteligente de Atención Ciudadana</p></div><div class="ciac-card px-5 py-4"><p class="text-xs uppercase tracking-widest text-slate-400">Experiencia activa</p><p class="font-bold text-slate-800 mt-1"><?= esc($profile['label']) ?></p></div></div></header>
         <?= $this->renderSection('content') ?>
     </main>
 </div>
