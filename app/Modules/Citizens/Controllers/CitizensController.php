@@ -11,12 +11,44 @@ class CitizensController extends BaseController
 {
     public function index()
     {
+        $query = trim((string) $this->request->getGet('q'));
+        $status = trim((string) $this->request->getGet('status'));
+        $perPage = (int) $this->request->getGet('per_page');
+        $perPage = in_array($perPage, [10, 20, 50, 100], true) ? $perPage : 20;
+        $page = max(1, (int) ($this->request->getGet('page') ?? 1));
+
         $model = new CitizenModel();
+
+        if ($query !== '') {
+            $model->groupStart()
+                ->like('name', $query)
+                ->orLike('municipality', $query)
+                ->orLike('community', $query)
+                ->orLike('phone', $query)
+                ->orLike('email', $query)
+                ->groupEnd();
+        }
+
+        if ($status !== '') {
+            $model->where('status', $status);
+        }
+
+        $total = $model->countAllResults(false);
+        $citizens = $model->orderBy('created_at', 'DESC')->paginate($perPage, 'default', $page);
 
         return view('Modules\Citizens\Views\index', [
             'title' => 'Ciudadanos',
-            'citizens' => $model->orderBy('created_at', 'DESC')->paginate(20),
-            'pager' => $model->pager,
+            'citizens' => $citizens,
+            'filters' => [
+                'q' => $query,
+                'status' => $status,
+                'per_page' => $perPage,
+            ],
+            'total' => $total,
+            'page' => $page,
+            'pageCount' => max(1, (int) ceil($total / $perPage)),
+            'from' => $total === 0 ? 0 : (($page - 1) * $perPage) + 1,
+            'to' => min($page * $perPage, $total),
         ]);
     }
 
