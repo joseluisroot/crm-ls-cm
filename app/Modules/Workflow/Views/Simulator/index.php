@@ -43,6 +43,7 @@
                     method="post"
                     action="<?= site_url('admin/workflows/simulator/start') ?>"
                     class="mt-6"
+                    data-loading="Iniciando simulación..."
                 >
                     <?= csrf_field() ?>
 
