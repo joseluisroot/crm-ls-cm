@@ -7,11 +7,11 @@
         <h3 class="mt-3 text-2xl font-black text-slate-900"><?= esc($role['name']) ?></h3>
         <p class="mt-1 text-sm font-mono text-pink-600"><?= esc($role['code']) ?></p>
     </div>
-    <form method="post" action="<?= site_url('admin/access/roles/' . $role['id'] . '/status') ?>">
+    <form method="post" action="<?= site_url('admin/access/roles/' . $role['id'] . '/status') ?>" data-confirm="¿Confirmas este cambio de estado?" data-confirm-text="La disponibilidad del rol se actualizará inmediatamente." data-loading="Actualizando rol...">
         <?= csrf_field() ?>
         <?php $isActive = (int) $role['is_active'] === 1; ?>
         <input type="hidden" name="is_active" value="<?= $isActive ? 0 : 1 ?>">
-        <button type="submit" class="px-5 py-3 rounded-xl font-black <?= $isActive ? 'bg-red-50 text-red-700 hover:bg-red-100' : 'bg-emerald-600 text-white hover:bg-emerald-700' ?>" onclick="return confirm('¿Confirmas este cambio de estado?')">
+        <button type="submit" class="px-5 py-3 rounded-xl font-black <?= $isActive ? 'bg-red-50 text-red-700 hover:bg-red-100' : 'bg-emerald-600 text-white hover:bg-emerald-700' ?>">
             <?= $isActive ? 'Desactivar rol' : 'Activar rol' ?>
         </button>
     </form>
