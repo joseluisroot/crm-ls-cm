@@ -18,11 +18,11 @@
             <div><dt class="text-slate-400">Creado</dt><dd class="font-bold text-slate-800 mt-1"><?= esc($user['created_at'] ?? '-') ?></dd></div>
         </dl>
 
-        <form method="post" action="<?= site_url('admin/access/users/' . $user['id'] . '/status') ?>" class="mt-8">
+        <form method="post" action="<?= site_url('admin/access/users/' . $user['id'] . '/status') ?>" class="mt-8" data-confirm="¿Confirmas este cambio de estado?" data-confirm-text="El acceso del usuario se actualizará inmediatamente." data-loading="Actualizando usuario...">
             <?= csrf_field() ?>
             <?php $isActive = ($user['status'] ?? '') === 'active'; ?>
             <input type="hidden" name="status" value="<?= $isActive ? 'inactive' : 'active' ?>">
-            <button type="submit" class="w-full px-4 py-3 rounded-xl font-black transition <?= $isActive ? 'bg-red-50 text-red-700 hover:bg-red-100' : 'bg-emerald-600 text-white hover:bg-emerald-700' ?>" onclick="return confirm('¿Confirmas este cambio de estado?')"><?= $isActive ? 'Desactivar usuario' : 'Activar usuario' ?></button>
+            <button type="submit" class="w-full px-4 py-3 rounded-xl font-black transition <?= $isActive ? 'bg-red-50 text-red-700 hover:bg-red-100' : 'bg-emerald-600 text-white hover:bg-emerald-700' ?>"><?= $isActive ? 'Desactivar usuario' : 'Activar usuario' ?></button>
         </form>
     </section>
 
@@ -48,11 +48,11 @@
 <section class="mt-6 bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
     <h3 class="text-xl font-black text-slate-900">Restablecer contraseña</h3>
     <p class="text-sm text-slate-500 mt-1">Asigna una contraseña temporal de al menos 10 caracteres y entrégala por un canal seguro.</p>
-    <form method="post" action="<?= site_url('admin/access/users/' . $user['id'] . '/reset-password') ?>" class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+    <form method="post" action="<?= site_url('admin/access/users/' . $user['id'] . '/reset-password') ?>" class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4" data-confirm="¿Restablecer la contraseña?" data-confirm-text="La contraseña actual dejará de funcionar inmediatamente." data-confirm-type="danger" data-loading="Restableciendo contraseña...">
         <?= csrf_field() ?>
         <input type="password" name="password" required minlength="10" autocomplete="new-password" placeholder="Nueva contraseña" class="rounded-xl border border-slate-300 px-4 py-3">
         <input type="password" name="password_confirmation" required minlength="10" autocomplete="new-password" placeholder="Confirmar contraseña" class="rounded-xl border border-slate-300 px-4 py-3">
-        <div class="md:col-span-2 flex justify-end"><button type="submit" class="px-5 py-3 rounded-xl bg-amber-500 text-slate-950 font-black hover:bg-amber-400" onclick="return confirm('¿Confirmas el restablecimiento de contraseña?')">Restablecer contraseña</button></div>
+        <div class="md:col-span-2 flex justify-end"><button type="submit" class="px-5 py-3 rounded-xl bg-amber-500 text-slate-950 font-black hover:bg-amber-400">Restablecer contraseña</button></div>
     </form>
 </section>
 
