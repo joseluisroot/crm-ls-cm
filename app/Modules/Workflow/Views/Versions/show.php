@@ -58,14 +58,11 @@
     <?php endif; ?>
 <?php endif; ?>
 
-
-
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
             <h2 class="text-xl font-black text-slate-900">
                 Nodos
             </h2>
-
 
             <div class="space-y-4 mt-5">
                 <?php foreach ($nodes as $node): ?>
@@ -88,15 +85,15 @@
                                                 "admin/workflows/{$workflow['id']}/versions/"
                                                 . "{$version['id']}/nodes/{$node['id']}/delete"
                                         ) ?>"
+                                        data-confirm="¿Eliminar este nodo y sus transiciones?"
+                                        data-confirm-text="Esta acción eliminará también las transiciones relacionadas y no puede deshacerse."
+                                        data-loading="Eliminando nodo..."
                                 >
                                     <?= csrf_field() ?>
 
                                     <button
                                             type="submit"
                                             class="text-sm font-bold text-red-600"
-                                            onclick="return confirm(
-                    '¿Eliminar este nodo y sus transiciones?'
-                )"
                                     >
                                         Eliminar
                                     </button>
@@ -140,7 +137,6 @@
                 Transiciones
             </h2>
 
-
             <div class="space-y-4 mt-5">
                 <?php foreach ($transitions as $transition): ?>
                     <?php if ($version['status'] === 'draft'): ?>
@@ -163,15 +159,15 @@
                                             . "{$version['id']}/transitions/"
                                             . "{$transition['id']}/delete"
                                     ) ?>"
+                                    data-confirm="¿Eliminar esta transición?"
+                                    data-confirm-text="La conexión dejará de estar disponible en esta versión del workflow."
+                                    data-loading="Eliminando transición..."
                             >
                                 <?= csrf_field() ?>
 
                                 <button
                                         type="submit"
                                         class="text-sm font-bold text-red-600"
-                                        onclick="return confirm(
-                    '¿Eliminar esta transición?'
-                )"
                                 >
                                     Eliminar
                                 </button>

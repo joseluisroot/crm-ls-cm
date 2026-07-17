@@ -32,6 +32,13 @@ Esta matriz registra la preparación de CIAC antes de activar el filtro CSRF glo
 | Workflow | Crear versión vacía | Sí | Sí | Preparado |
 | Workflow | Clonar versión | Sí | Sí | Preparado |
 | Workflow | Publicar versión | Sí | Sí | Preparado |
+| Workflow Builder | Crear y editar nodo | Sí | Sí | Preparado |
+| Workflow Builder | Eliminar nodo | Sí | Sí | Preparado |
+| Workflow Builder | Crear y editar transición | Sí | Sí | Preparado |
+| Workflow Builder | Eliminar transición | Sí | Sí | Preparado |
+| Workflow Simulator | Iniciar simulación | Sí | Sí | Preparado |
+| Workflow Simulator | Interactuar | Sí | Sí | Preparado |
+| Workflow Simulator | Reiniciar simulación | Sí | Sí | Preparado |
 | Publications | Resolver participantes | Pendiente de interfaz | Ruta POST registrada | Revisar |
 
 ## Hallazgos corregidos
@@ -40,14 +47,17 @@ Esta matriz registra la preparación de CIAC antes de activar el filtro CSRF glo
 - Los botones sensibles auditados declaran explícitamente `type="submit"`.
 - La creación de casos usa `site_url()` en lugar de una ruta absoluta escrita manualmente.
 - La creación de casos informa el estado de carga durante el envío.
-- Auth, Authorization, Operations, Cases, Notifications, Integration Replay y las acciones principales de Workflow incluyen token CSRF.
+- Publicar una versión de workflow usa confirmación central y estado de carga.
+- Eliminar nodos y transiciones usa confirmación central y elimina dependencias de `onclick="confirm(...)"`.
+- Crear y clonar versiones muestra un estado de carga durante el procesamiento.
+- El inicio del Workflow Simulator muestra un estado de carga.
+- Builder y Simulator incluyen token CSRF en sus acciones POST auditadas.
 
 ## Pendientes antes de activar CSRF global
 
-- Sustituir las confirmaciones nativas restantes en Cases, Integration Replay y Workflow por el sistema central SweetAlert.
+- Sustituir las confirmaciones nativas restantes en Cases e Integration Replay por el sistema central SweetAlert.
 - Confirmar dónde se invoca la ruta `publications/(:num)/resolve-participants`; actualmente no aparece en las vistas principales de Publications.
-- Auditar formularios profundos del Workflow Builder: nodos, transiciones, eliminación y archivado.
-- Auditar Workflow Simulator: iniciar, interactuar y reiniciar.
+- Revisar la acción de archivado de workflows y confirmar su interfaz.
 - Revisar peticiones AJAX o `fetch()` que modifiquen estado.
 - Evaluar endpoints de sistema y webhooks para exclusión explícita.
 

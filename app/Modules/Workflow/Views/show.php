@@ -24,6 +24,7 @@
                 . $workflow['id']
                 . '/versions'
             ) ?>"
+            data-loading="Creando nueva versión..."
         >
             <?= csrf_field() ?>
 
@@ -108,6 +109,7 @@
                                 . $version['id']
                                 . '/clone'
                             ) ?>"
+                            data-loading="Clonando versión..."
                         >
                             <?= csrf_field() ?>
 
@@ -129,15 +131,15 @@
                                     . $version['id']
                                     . '/publish'
                                 ) ?>"
+                                data-confirm="¿Deseas publicar esta versión?"
+                                data-confirm-text="La versión publicada pasará a ser el flujo activo disponible para ejecución."
+                                data-loading="Publicando versión..."
                             >
                                 <?= csrf_field() ?>
 
                                 <button
                                     type="submit"
                                     class="px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-bold"
-                                    onclick="return confirm(
-                                    '¿Deseas publicar esta versión?'
-                                )"
                                 >
                                     Publicar
                                 </button>
