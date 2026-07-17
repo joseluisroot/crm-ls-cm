@@ -8,7 +8,7 @@ $routes->get('privacy-policy', 'PublicPageController::privacyPolicy');
 
 $routes->get('admin/login', '\Modules\Auth\Controllers\AuthController::login');
 $routes->post('admin/login', '\Modules\Auth\Controllers\AuthController::attemptLogin');
-$routes->get('admin/logout', '\Modules\Auth\Controllers\AuthController::logout');
+$routes->post('admin/logout', '\Modules\Auth\Controllers\AuthController::logout', ['filter' => 'adminAuth']);
 
 $routes->group('admin', ['filter' => 'adminAuth'], static function ($routes) {
     $routes->get('/', '\Modules\Dashboard\Controllers\DashboardController::index');
