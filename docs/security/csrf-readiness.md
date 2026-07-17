@@ -22,23 +22,42 @@ Esta matriz registra la preparación de CIAC antes de activar el filtro CSRF glo
 | Operations | Cambiar estado | Sí | Sí | Preparado |
 | Operations | Guardar borrador de respuesta | Sí | Sí | Preparado |
 | Operations | Enviar respuesta | Sí | Sí | Preparado |
+| Cases | Crear caso | Sí | Sí | Preparado |
+| Cases | Cambiar estado | Sí | Sí | Preparado |
+| Cases | Asignar responsable | Sí | Sí | Preparado |
+| Cases | Retirar asignación | Sí | Sí | Preparado |
+| Notifications | Marcar notificación como leída | Sí | Sí | Preparado |
+| Integration Replay | Reproducir evento | Sí | Sí | Preparado |
+| Workflow | Crear workflow | Sí | Sí | Preparado |
+| Workflow | Crear versión vacía | Sí | Sí | Preparado |
+| Workflow | Clonar versión | Sí | Sí | Preparado |
+| Workflow | Publicar versión | Sí | Sí | Preparado |
+| Publications | Resolver participantes | Pendiente de interfaz | Ruta POST registrada | Revisar |
 
 ## Hallazgos corregidos
 
-- Las acciones sensibles de usuario y rol ahora usan el sistema central de confirmación SweetAlert.
-- Los botones sensibles declaran explícitamente `type="submit"`.
-- Las confirmaciones nativas mediante `onclick="confirm(...)"` fueron eliminadas en las vistas auditadas.
+- Las acciones sensibles de usuario y rol usan el sistema central de confirmación SweetAlert.
+- Los botones sensibles auditados declaran explícitamente `type="submit"`.
+- La creación de casos usa `site_url()` en lugar de una ruta absoluta escrita manualmente.
+- La creación de casos informa el estado de carga durante el envío.
+- Auth, Authorization, Operations, Cases, Notifications, Integration Replay y las acciones principales de Workflow incluyen token CSRF.
 
 ## Pendientes antes de activar CSRF global
 
-- Cases.
-- Notifications.
-- Publications.
-- Integration Replay.
-- Workflow Builder y Workflow Simulator.
-- Peticiones AJAX o `fetch()` que modifiquen estado.
-- Endpoints de sistema y webhooks, que deberán evaluarse para exclusión explícita cuando corresponda.
+- Sustituir las confirmaciones nativas restantes en Cases, Integration Replay y Workflow por el sistema central SweetAlert.
+- Confirmar dónde se invoca la ruta `publications/(:num)/resolve-participants`; actualmente no aparece en las vistas principales de Publications.
+- Auditar formularios profundos del Workflow Builder: nodos, transiciones, eliminación y archivado.
+- Auditar Workflow Simulator: iniciar, interactuar y reiniciar.
+- Revisar peticiones AJAX o `fetch()` que modifiquen estado.
+- Evaluar endpoints de sistema y webhooks para exclusión explícita.
+
+## Exclusiones esperadas
+
+Los webhooks externos legítimos no pueden enviar el token CSRF de la sesión administrativa. Al activar el filtro global deberán documentarse y limitarse exclusiones como:
+
+- `webhooks/messenger` para recepción de eventos firmados por Meta;
+- endpoints de sistema únicamente cuando cuenten con autenticación independiente suficientemente fuerte.
 
 ## Regla de activación
 
-El filtro CSRF global solo debe activarse cuando todas las operaciones internas que modifican estado estén marcadas como preparadas y los endpoints externos legítimos tengan una exclusión documentada.
+El filtro CSRF global solo debe activarse cuando todas las operaciones internas que modifican estado estén marcadas como preparadas y los endpoints externos legítimos tengan una exclusión mínima, explícita y documentada.

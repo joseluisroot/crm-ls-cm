@@ -2,7 +2,7 @@
 
 <?= $this->section('content') ?>
 
-    <form method="post" action="/admin/cases/store" class="bg-white rounded-2xl shadow p-6 space-y-5">
+    <form method="post" action="<?= site_url('admin/cases/store') ?>" class="bg-white rounded-2xl shadow p-6 space-y-5" data-loading="Guardando caso...">
 
         <?= csrf_field() ?>
 
@@ -70,7 +70,7 @@
             </div>
         </div>
 
-        <button class="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold">
+        <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold">
             Guardar caso
         </button>
 
