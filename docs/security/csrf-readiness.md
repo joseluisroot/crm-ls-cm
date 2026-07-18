@@ -1,6 +1,6 @@
 # CSRF Readiness Matrix
 
-Esta matriz registra la preparación de CIAC antes de activar el filtro CSRF global de CodeIgniter 4.
+Esta matriz registra la preparación y activación del filtro CSRF global de CodeIgniter 4 en CIAC.
 
 ## Estado
 
@@ -70,20 +70,46 @@ Cualquier nueva petición JavaScript que modifique estado deberá:
 - actualizar el token cuando la configuración de regeneración lo requiera;
 - conservar controles de autorización del servidor.
 
-## Exclusiones propuestas para activación global
+## Activación global
 
-Los endpoints externos legítimos no pueden enviar el token CSRF de la sesión administrativa. La activación global deberá usar exclusiones mínimas y explícitas:
+El filtro `csrf` está habilitado globalmente en `Config/Filters.php`. No existe ninguna exclusión bajo `admin/*`.
 
-- `webhooks/messenger`, porque recibe eventos externos de Meta y debe validarse mediante firma y token de verificación;
-- `system/migrate` y `system/seed/*` solamente si se confirma que conservan autenticación independiente fuerte, HTTPS obligatorio y restricción operativa. En caso contrario, no deben excluirse y deberán migrarse a comandos CLI.
+Las únicas exclusiones configuradas son:
 
-No deben excluirse rutas bajo `admin/*`.
+- `webhooks/messenger`, porque recibe solicitudes POST externas de Meta y no comparte la sesión administrativa;
+- `system/migrate`;
+- `system/seed/*`.
+
+Las acciones de sistema mantienen autenticación independiente mediante:
+
+- método POST obligatorio;
+- bandera `SYSTEM_ACTIONS_ENABLED`;
+- HTTPS obligatorio;
+- token secreto enviado en `X-System-Token` y validado con `hash_equals()`;
+- allowlist opcional de direcciones IP;
+- lista explícita de seeders permitidos;
+- bloqueo de concurrencia y registro de intentos no autorizados.
+
+## Riesgo pendiente del webhook
+
+El webhook recibe y registra el encabezado `X-Hub-Signature-256`, pero la auditoría actual no encontró una validación criptográfica de esa firma antes del procesamiento.
+
+La exclusión CSRF es necesaria para permitir llamadas externas de Meta, pero no sustituye la autenticación del origen. El siguiente hardening de seguridad debe validar `X-Hub-Signature-256` con el App Secret de Meta y rechazar la solicitud antes de capturar o procesar el payload cuando la firma sea inválida o falte.
+
+## Pruebas de regresión requeridas
+
+Después del despliegue deben validarse, como mínimo:
+
+1. iniciar sesión con token válido;
+2. confirmar rechazo del login POST sin token CSRF;
+3. cerrar sesión mediante POST;
+4. ejecutar las acciones POST de Authorization, Operations, Cases, Notifications, Integration Replay, Publications y Workflow;
+5. confirmar que un POST administrativo sin token devuelve rechazo CSRF;
+6. verificar recepción del webhook de Messenger;
+7. verificar `system/migrate` con HTTPS, bandera habilitada y encabezado correcto;
+8. confirmar rechazo de acciones de sistema sin token, con token incorrecto o desde IP no autorizada;
+9. revisar logs por errores `403` inesperados después del despliegue.
 
 ## Estado de activación
 
-La interfaz administrativa está preparada para habilitar el filtro CSRF global. El siguiente PR debe limitarse a:
-
-1. activar `csrf` en `Config/Filters.php`;
-2. configurar las exclusiones externas aprobadas;
-3. ejecutar pruebas de regresión sobre login, logout y todas las acciones POST de la matriz;
-4. comprobar que los webhooks y tareas de despliegue siguen operando únicamente bajo sus mecanismos de autenticación independientes.
+**CSRF global activado en código.** La fase de Security Hardening queda lista para cierre después de fusionar este cambio y completar la regresión funcional en el entorno de despliegue.
