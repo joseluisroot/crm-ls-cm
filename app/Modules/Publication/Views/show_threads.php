@@ -117,7 +117,14 @@ foreach ($activity as $day) $maxActivity = max($maxActivity, (int) ($day['total'
             <?php if (($identityMetrics['unidentified_participants'] ?? 0) > 0): ?>
                 <form method="post" action="<?= site_url('admin/publications/' . $publication['id'] . '/resolve-participants') ?>">
                     <?= csrf_field() ?>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-pink-600 text-white text-sm font-black hover:bg-pink-700" onclick="return confirm('Se crearán Citizens para los participantes aún no vinculados. ¿Continuar?')">
+                    <button
+                        type="submit"
+                        class="px-4 py-2 rounded-xl bg-pink-600 text-white text-sm font-black hover:bg-pink-700"
+                        data-confirm="Se crearán Citizens para los participantes que todavía no están vinculados."
+                        data-confirm-title="Resolver participantes"
+                        data-confirm-button="Sí, resolver"
+                        data-loading="Resolviendo participantes..."
+                    >
                         Resolver <?= esc($identityMetrics['unidentified_participants']) ?> pendiente(s)
                     </button>
                 </form>

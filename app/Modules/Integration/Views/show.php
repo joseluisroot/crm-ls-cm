@@ -17,9 +17,18 @@ $statusClass = match ($event['status']) {
         <h1 class="text-3xl font-black text-slate-900 mt-3">Integration Event #<?= esc($event['id']) ?></h1>
         <p class="text-slate-500 mt-2">Evidencia, trazabilidad, linaje y diagnóstico del procesamiento.</p>
     </div>
-    <form method="post" action="<?= site_url('admin/integration/events/' . $event['id'] . '/replay') ?>" onsubmit="return confirm('¿Deseas reproducir este evento? Se creará una nueva ejecución auditable.');">
+    <form method="post" action="<?= site_url('admin/integration/events/' . $event['id'] . '/replay') ?>">
         <?= csrf_field() ?>
-        <button class="px-5 py-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold shadow-sm">Reproducir evento</button>
+        <button
+            type="submit"
+            class="px-5 py-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold shadow-sm"
+            data-confirm="Se creará una nueva ejecución auditable a partir de este evento."
+            data-confirm-title="Reproducir evento"
+            data-confirm-button="Sí, reproducir"
+            data-loading="Reproduciendo evento..."
+        >
+            Reproducir evento
+        </button>
     </form>
 </div>
 
