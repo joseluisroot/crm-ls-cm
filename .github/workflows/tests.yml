@@ -37,6 +37,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
+          mkdir -p build
           composer test 2>&1 | tee build/phpunit-output.txt
 
       - name: Upload PHPUnit diagnostics
