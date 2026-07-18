@@ -7,7 +7,7 @@ composer install
 composer test
 ```
 
-La configuración principal está en `phpunit.xml.dist` y usa el bootstrap oficial de pruebas de CodeIgniter 4.
+La configuración principal está en `phpunit.dist.xml` y usa el bootstrap oficial de pruebas de CodeIgniter 4.
 
 ## Estructura
 
@@ -38,9 +38,13 @@ La autorización por permiso continúa dependiendo de los datos configurados par
 - Los payloads externos deben construirse con fixtures sanitizados.
 - Las pruebas deben ser deterministas y poder ejecutarse repetidamente.
 
+## Cobertura
+
+La ejecución normal no exige un driver de cobertura. Cuando se necesite medir cobertura, debe habilitarse Xdebug o PCOV y ejecutarse PHPUnit con los parámetros de reporte correspondientes.
+
 ## CI
 
-GitHub Actions ejecuta `composer validate`, instala dependencias y corre `composer test` en cada Pull Request y en los pushes a `main`.
+GitHub Actions ejecuta `composer validate`, instala dependencias y corre `composer test` en cada Pull Request y en los pushes a `main`. El resultado de PHPUnit se conserva durante siete días como artefacto de diagnóstico, incluso cuando la ejecución falla.
 
 ## Próximas suites prioritarias
 
