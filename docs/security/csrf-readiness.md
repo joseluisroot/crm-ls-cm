@@ -28,6 +28,7 @@ Esta matriz registra la preparación de CIAC antes de activar el filtro CSRF glo
 | Cases | Retirar asignación | Sí | Sí | Preparado |
 | Notifications | Marcar notificación como leída | Sí | Sí | Preparado |
 | Integration Replay | Reproducir evento | Sí | Sí | Preparado |
+| Publications | Resolver participantes | Sí | Sí | Preparado |
 | Workflow | Crear workflow | Sí | Sí | Preparado |
 | Workflow | Crear versión vacía | Sí | Sí | Preparado |
 | Workflow | Clonar versión | Sí | Sí | Preparado |
@@ -39,35 +40,50 @@ Esta matriz registra la preparación de CIAC antes de activar el filtro CSRF glo
 | Workflow Simulator | Iniciar simulación | Sí | Sí | Preparado |
 | Workflow Simulator | Interactuar | Sí | Sí | Preparado |
 | Workflow Simulator | Reiniciar simulación | Sí | Sí | Preparado |
-| Publications | Resolver participantes | Pendiente de interfaz | Ruta POST registrada | Revisar |
 
 ## Hallazgos corregidos
 
 - Las acciones sensibles de usuario y rol usan el sistema central de confirmación SweetAlert.
 - Los botones sensibles auditados declaran explícitamente `type="submit"`.
-- La creación de casos usa `site_url()` en lugar de una ruta absoluta escrita manualmente.
-- La creación de casos informa el estado de carga durante el envío.
+- Las rutas internas modificadas usan `site_url()` en lugar de rutas absolutas escritas manualmente.
+- Cases informa estados de carga al cambiar estado, asignar y retirar asignación.
+- Retirar la asignación de un caso ya no depende de `onclick="confirm(...)"`.
+- Reproducir un evento usa confirmación central y estado de carga.
+- Resolver participantes de una publicación usa confirmación central, token CSRF y estado de carga.
 - Publicar una versión de workflow usa confirmación central y estado de carga.
-- Eliminar nodos y transiciones usa confirmación central y elimina dependencias de `onclick="confirm(...)"`.
+- Eliminar nodos y transiciones usa confirmación central.
 - Crear y clonar versiones muestra un estado de carga durante el procesamiento.
-- El inicio del Workflow Simulator muestra un estado de carga.
-- Builder y Simulator incluyen token CSRF en sus acciones POST auditadas.
+- Workflow Builder y Workflow Simulator incluyen token CSRF en sus acciones POST auditadas.
 
-## Pendientes antes de activar CSRF global
+## Acciones sin interfaz activa
 
-- Sustituir las confirmaciones nativas restantes en Cases e Integration Replay por el sistema central SweetAlert.
-- Confirmar dónde se invoca la ruta `publications/(:num)/resolve-participants`; actualmente no aparece en las vistas principales de Publications.
-- Revisar la acción de archivado de workflows y confirmar su interfaz.
-- Revisar peticiones AJAX o `fetch()` que modifiquen estado.
-- Evaluar endpoints de sistema y webhooks para exclusión explícita.
+La ruta POST `admin/workflows/(:num)/archive` está registrada, pero actualmente no existe un formulario visible que la invoque en las vistas principales de Workflow. Antes de exponer esa acción deberá agregarse una interfaz POST con `csrf_field()`, confirmación central y permiso `workflow.manage`.
 
-## Exclusiones esperadas
+## Revisión de JavaScript
 
-Los webhooks externos legítimos no pueden enviar el token CSRF de la sesión administrativa. Al activar el filtro global deberán documentarse y limitarse exclusiones como:
+Las acciones internas auditadas se ejecutan mediante formularios POST tradicionales. No se identificó una dependencia necesaria de `fetch()`, `$.ajax()`, `$.post()` o `axios.post()` para las operaciones incluidas en esta matriz.
 
-- `webhooks/messenger` para recepción de eventos firmados por Meta;
-- endpoints de sistema únicamente cuando cuenten con autenticación independiente suficientemente fuerte.
+Cualquier nueva petición JavaScript que modifique estado deberá:
 
-## Regla de activación
+- enviar el nombre y valor vigentes del token CSRF;
+- manejar respuestas `403` sin reintentos automáticos inseguros;
+- actualizar el token cuando la configuración de regeneración lo requiera;
+- conservar controles de autorización del servidor.
 
-El filtro CSRF global solo debe activarse cuando todas las operaciones internas que modifican estado estén marcadas como preparadas y los endpoints externos legítimos tengan una exclusión mínima, explícita y documentada.
+## Exclusiones propuestas para activación global
+
+Los endpoints externos legítimos no pueden enviar el token CSRF de la sesión administrativa. La activación global deberá usar exclusiones mínimas y explícitas:
+
+- `webhooks/messenger`, porque recibe eventos externos de Meta y debe validarse mediante firma y token de verificación;
+- `system/migrate` y `system/seed/*` solamente si se confirma que conservan autenticación independiente fuerte, HTTPS obligatorio y restricción operativa. En caso contrario, no deben excluirse y deberán migrarse a comandos CLI.
+
+No deben excluirse rutas bajo `admin/*`.
+
+## Estado de activación
+
+La interfaz administrativa está preparada para habilitar el filtro CSRF global. El siguiente PR debe limitarse a:
+
+1. activar `csrf` en `Config/Filters.php`;
+2. configurar las exclusiones externas aprobadas;
+3. ejecutar pruebas de regresión sobre login, logout y todas las acciones POST de la matriz;
+4. comprobar que los webhooks y tareas de despliegue siguen operando únicamente bajo sus mecanismos de autenticación independientes.
