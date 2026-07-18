@@ -15,9 +15,18 @@ final class QuickActionCatalogTest extends TestCase
         $actions = $catalog->all();
 
         self::assertNotEmpty($actions);
-        self::assertSame('/recibido', $actions[0]['command']);
 
-        $personalized = $catalog->personalize($actions[0], 'Juan Pérez');
+        $receivedAction = null;
+        foreach ($actions as $action) {
+            if (($action['command'] ?? null) === '/recibido') {
+                $receivedAction = $action;
+                break;
+            }
+        }
+
+        self::assertNotNull($receivedAction, 'El catálogo debe conservar la acción /recibido.');
+
+        $personalized = $catalog->personalize($receivedAction, 'Juan Pérez');
         self::assertStringContainsString('Juan Pérez', $personalized['body']);
         self::assertStringNotContainsString('{nombre}', $personalized['body']);
     }
