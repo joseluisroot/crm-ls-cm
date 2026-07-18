@@ -15,7 +15,7 @@
                 </p>
             </div>
 
-            <a href="/admin/cases" class="text-blue-600 font-semibold">
+            <a href="<?= site_url('admin/cases') ?>" class="text-blue-600 font-semibold">
                 Volver a casos
             </a>
         </div>
@@ -90,7 +90,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                <form method="post" action="/admin/cases/<?= esc($case['id']) ?>/change-status" class="bg-slate-50 rounded-xl p-5">
+                <form method="post" action="<?= site_url('admin/cases/' . $case['id'] . '/change-status') ?>" class="bg-slate-50 rounded-xl p-5">
                     <?= csrf_field() ?>
 
                     <label class="block text-sm font-semibold text-slate-700 mb-2">
@@ -105,7 +105,7 @@
                         <?php endforeach; ?>
                     </select>
 
-                    <button class="bg-pink-600 hover:bg-pink-700 text-white font-bold px-5 py-3 rounded-xl">
+                    <button type="submit" class="bg-pink-600 hover:bg-pink-700 text-white font-bold px-5 py-3 rounded-xl" data-loading="Actualizando estado...">
                         Actualizar estado
                     </button>
                 </form>
@@ -145,6 +145,7 @@
                         <button
                                 type="submit"
                                 class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-5 py-3 rounded-xl"
+                                data-loading="Asignando caso..."
                         >
                             Asignar caso
                         </button>
@@ -162,7 +163,10 @@
                         <button
                                 type="submit"
                                 class="text-sm font-semibold text-red-600 hover:text-red-700"
-                                onclick="return confirm('¿Deseas retirar el responsable asignado?')"
+                                data-confirm="¿Deseas retirar el responsable asignado?"
+                                data-confirm-title="Retirar asignación"
+                                data-confirm-button="Sí, retirar"
+                                data-loading="Retirando asignación..."
                         >
                             Retirar asignación
                         </button>
