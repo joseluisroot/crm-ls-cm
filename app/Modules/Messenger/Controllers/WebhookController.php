@@ -3,6 +3,7 @@
 namespace Modules\Messenger\Controllers;
 
 use App\Controllers\BaseController;
+use Modules\Messenger\Security\MetaWebhookSignatureValidator;
 use Throwable;
 
 class WebhookController extends BaseController
@@ -23,9 +24,32 @@ class WebhookController extends BaseController
     public function receive()
     {
         $startedAt = microtime(true);
-        $payload = $this->request->getJSON(true);
+        $rawBody = (string) $this->request->getBody();
+        $signature = $this->request->getHeaderLine('X-Hub-Signature-256');
+        $signatureValidator = new MetaWebhookSignatureValidator((string) env('META_APP_SECRET'));
 
-        if (! $payload) {
+        if (! $signatureValidator->isConfigured()) {
+            log_message('critical', 'Meta webhook rejected because META_APP_SECRET is not configured.');
+
+            return $this->response
+                ->setStatusCode(503)
+                ->setBody('Service unavailable.');
+        }
+
+        if (! $signatureValidator->isValid($rawBody, $signature)) {
+            log_message('warning', 'Meta webhook rejected due to invalid signature. IP: {ip}. User-Agent: {userAgent}.', [
+                'ip' => $this->request->getIPAddress(),
+                'userAgent' => $this->request->getUserAgent()->getAgentString(),
+            ]);
+
+            return $this->response
+                ->setStatusCode(401)
+                ->setBody('Unauthorized.');
+        }
+
+        $payload = json_decode($rawBody, true);
+
+        if (! is_array($payload) || $payload === []) {
             return $this->response->setStatusCode(400)->setJSON([
                 'status' => 'error',
                 'message' => 'Invalid JSON',
@@ -41,7 +65,7 @@ class WebhookController extends BaseController
             externalEventId: $this->externalEventId($payload),
             endpoint: (string) $this->request->getUri(),
             requestIp: $this->request->getIPAddress(),
-            signature: $this->request->getHeaderLine('X-Hub-Signature-256') ?: null,
+            signature: $signature,
         );
 
         $trace = [['step' => 'integration_event_received', 'at' => date(DATE_ATOM)]];
