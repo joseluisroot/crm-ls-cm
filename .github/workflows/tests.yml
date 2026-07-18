@@ -34,4 +34,16 @@ jobs:
         run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Run test suite
-        run: composer test
+        shell: bash
+        run: |
+          set -o pipefail
+          composer test 2>&1 | tee build/phpunit-output.txt
+
+      - name: Upload PHPUnit diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phpunit-diagnostics
+          path: build/phpunit-output.txt
+          if-no-files-found: ignore
+          retention-days: 7
