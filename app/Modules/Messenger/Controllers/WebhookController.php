@@ -3,6 +3,7 @@
 namespace Modules\Messenger\Controllers;
 
 use App\Controllers\BaseController;
+use Modules\Integration\Application\IntegrationReplayProtectionService;
 use Modules\Messenger\Security\MetaWebhookSignatureValidator;
 use Throwable;
 
@@ -56,13 +57,29 @@ class WebhookController extends BaseController
             ]);
         }
 
+        $externalEventId = $this->externalEventId($payload);
+        $replayProtection = new IntegrationReplayProtectionService(service('integrationEventRepository'));
+        $duplicate = $replayProtection->findDuplicate('FACEBOOK', $externalEventId);
+
+        if ($duplicate !== null) {
+            log_message('info', 'Duplicate Meta webhook delivery ignored. External event: {externalEventId}. Correlation: {correlationId}.', [
+                'externalEventId' => $externalEventId,
+                'correlationId' => $duplicate['correlation_id'] ?? 'unknown',
+            ]);
+
+            return $this->response->setStatusCode(200)->setJSON([
+                'status' => 'duplicate',
+                'correlation_id' => $duplicate['correlation_id'] ?? null,
+            ]);
+        }
+
         $capture = service('integrationEventCapture');
         $envelope = $capture->capture(
             source: 'FACEBOOK',
             eventType: $this->detectEnvelopeType($payload),
             payload: $payload,
             headers: $this->normalizedHeaders(),
-            externalEventId: $this->externalEventId($payload),
+            externalEventId: $externalEventId,
             endpoint: (string) $this->request->getUri(),
             requestIp: $this->request->getIPAddress(),
             signature: $signature,
