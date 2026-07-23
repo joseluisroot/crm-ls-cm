@@ -7,9 +7,10 @@ namespace Modules\Integration\Infrastructure;
 use CodeIgniter\Database\BaseConnection;
 use Modules\Integration\Domain\IntegrationEvent;
 use Modules\Integration\Domain\IntegrationEventRepositoryInterface;
+use Modules\Integration\Domain\ReplayProtectionRepositoryInterface;
 use RuntimeException;
 
-final class DatabaseIntegrationEventRepository implements IntegrationEventRepositoryInterface
+final class DatabaseIntegrationEventRepository implements IntegrationEventRepositoryInterface, ReplayProtectionRepositoryInterface
 {
     public function __construct(private readonly ?BaseConnection $db = null)
     {
@@ -50,6 +51,21 @@ final class DatabaseIntegrationEventRepository implements IntegrationEventReposi
     public function find(int $eventId): ?array
     {
         $row = $this->connection()->table('integration_events')->where('id', $eventId)->get()->getRowArray();
+        return $row ?: null;
+    }
+
+    public function findOriginalByExternalEventId(string $source, string $externalEventId): ?array
+    {
+        $row = $this->connection()->table('integration_events')
+            ->select('id, correlation_id, status, received_at')
+            ->where('source', strtoupper(trim($source)))
+            ->where('external_event_id', trim($externalEventId))
+            ->where('original_event_id', null)
+            ->where('replay_attempt', 0)
+            ->orderBy('id', 'ASC')
+            ->get(1)
+            ->getRowArray();
+
         return $row ?: null;
     }
 
